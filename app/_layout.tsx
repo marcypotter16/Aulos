@@ -4,16 +4,16 @@ export default function TabsLayout() {
   return (
     <Tabs>
       <Tabs.Screen
-        name="(tabs)/home"
+        name="(tabs)/index"
         options={{ title: "Home" }}
       />
       <Tabs.Screen
-        name="(tabs)/profile"
-        options={{ title: "Profile" }}
-      />
+        name="(tabs)/search"
+        options={{ title: "Search" }}
+      />  
       <Tabs.Screen
-        name="(tabs)/saved"
-        options={{ title: "Saved" }}
+        name="(tabs)/profile"
+        options={{ title: "Profile", headerShown: false }}
       />
     </Tabs>
   );
