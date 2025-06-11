@@ -5,15 +5,15 @@ import { FlatList, Image, StyleSheet, Text, View } from 'react-native';
 const savedPosts: Post[] = [
   {
     id: '10',
-    name: 'Lila Bassline',
-    avatar: 'https://i.pravatar.cc/100?img=10',
+    userName: 'Lila Bassline',
+    userProfilePicture: 'https://i.pravatar.cc/100?img=10',
     image: 'https://images.unsplash.com/photo-1580445650039-d53e9b4c18d3',
     text: 'Experienced bassist available for jazz/funk gigs. 🎸',
   },
   {
     id: '11',
-    name: 'Gabe Drums',
-    avatar: 'https://i.pravatar.cc/100?img=11',
+    userName: 'Gabe Drums',
+    userProfilePicture: 'https://i.pravatar.cc/100?img=11',
     image: '',
     text: 'Need a guitarist for an indie band project in Austin.',
   },
@@ -23,8 +23,8 @@ const SavedScreen = () => {
   const renderItem = ({ item }: { item: Post }) => (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Image source={{ uri: item.avatar }} style={styles.avatar} />
-        <Text style={styles.name}>{item.name}</Text>
+        <Image source={{ uri: item.userProfilePicture }} style={styles.avatar} />
+        <Text style={styles.name}>{item.userName}</Text>
       </View>
       <Text style={styles.text}>{item.text}</Text>
       {item.image ? <Image source={{ uri: item.image }} style={styles.postImage} /> : null}

@@ -14,8 +14,8 @@ const PostCard = ({ post }: Props) => {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Image source={{ uri: post.avatar }} style={styles.avatar} />
-        <Text style={styles.name}>{post.name}</Text>
+        <Image source={{ uri: post.userProfilePicture }} style={styles.avatar} />
+        <Text style={styles.name}>{post.userName}</Text>
       </View>
       <Text style={styles.text}>{post.text}</Text>
       {post.image ? <Image source={{ uri: post.image }} style={styles.postImage} /> : null}
