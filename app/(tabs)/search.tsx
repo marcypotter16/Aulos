@@ -1,10 +1,12 @@
+import HeaderToggleButton from '@/components/HeaderToggleButton';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function SearchScreen() {
     return (
         <View style={styles.container}>
-        <Text style={styles.title}>Search Screen</Text>
+            <HeaderToggleButton />
+            <Text style={styles.title}>Search Screen</Text>
         </View>
     );
 }
