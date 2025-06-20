@@ -18,9 +18,19 @@ export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>('light');
+  // useEffect(() => {
+  //   if (typeof document !== 'undefined') {
+  //     // This is for web, where we can set the class on the body
+  //     const background = theme === 'dark' ? darkThemeColors.background : '#fff';
+  //     document.body.style.backgroundColor = background;
+  //     document.documentElement.style.backgroundColor = background;
+  //   }
+    
+  // }, [theme]);
 
   // Load stored or system theme on startup
   useEffect(() => {
+    // Initialize theme from AsyncStorage or system preference
     const initTheme = async () => {
       const stored = await AsyncStorage.getItem('app-theme');
       if (stored === 'light' || stored === 'dark') {

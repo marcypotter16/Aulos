@@ -1,4 +1,6 @@
 import PostCard from '@/components/PostCard/PostCard';
+import { darkThemeColors, lightThemeColors } from '@/constants';
+import { useTheme } from '@/hooks/ThemeContext';
 import Post from '@/models/post';
 import React from 'react';
 import { FlatList, StyleSheet } from 'react-native';
@@ -24,7 +26,8 @@ const posts: Post[] = [
 ];
 
 const FeedScreen = () => {
-  // const [theme, setTheme] = useTheme();
+  const { theme } = useTheme();
+  const colorScheme = theme === 'dark' ? darkThemeColors : lightThemeColors;
 
   // Function to render each post item
   const renderItem = ({ item }: { item: Post }) => (
@@ -36,16 +39,19 @@ const FeedScreen = () => {
       data={posts}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={getStyles(theme).container}
     />
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    paddingVertical: 10,
-  },
-  
-});
+const getStyles = (theme: 'dark' | 'light') =>
+  StyleSheet.create({
+    container: {
+      paddingVertical: 10,
+      backgroundColor: theme === 'dark' ? darkThemeColors.background : lightThemeColors.background,
+      minHeight: '100%', // Ensure the container takes full height
+    },
+    
+  });
 
 export default FeedScreen;
