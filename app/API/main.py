@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from db.database import Base, engine
-from routers import search, users
+from routers import search, users, auth
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -20,3 +20,4 @@ Base.metadata.create_all(bind=engine)
 # Include routers
 app.include_router(users.router)
 app.include_router(search.router)
+app.include_router(auth.router)

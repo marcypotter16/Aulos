@@ -27,7 +27,6 @@ const posts: Post[] = [
 
 const FeedScreen = () => {
   const { theme } = useTheme();
-  const colorScheme = theme === 'dark' ? darkThemeColors : lightThemeColors;
 
   // Function to render each post item
   const renderItem = ({ item }: { item: Post }) => (

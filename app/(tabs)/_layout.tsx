@@ -1,4 +1,4 @@
-import HeaderToggleButton from "@/components/HeaderToggleButton";
+import HeaderRightButtons from "@/components/buttons/HeaderRightButtons";
 import { darkThemeColors, lightThemeColors } from "@/constants";
 import { useTheme } from "@/hooks/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -47,7 +47,7 @@ export default function TabsLayout() {
             ),
 
             // This is the "toggle theme" button in the header
-            headerRight: () => <HeaderToggleButton />,
+            headerRight: () => <HeaderRightButtons />,
           }}
         />
         {/* This is the home screen, which is the first tab */}
