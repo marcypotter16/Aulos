@@ -1,48 +1,66 @@
-import { darkThemeColors, lightThemeColors } from '@/constants';
-import { useTheme } from '@/hooks/ThemeContext';
-import { Link } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { darkThemeColors, lightThemeColors } from "@/constants";
+import { useTheme } from "@/hooks/ThemeContext";
+import { Link } from "expo-router";
+import React, { useState } from "react";
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+// Authentication token management
+import * as SecureStore from "expo-secure-store";
 
 const LoginPage = () => {
-  const { theme } = useTheme(); // Assuming you have a useTheme hook to get the current theme
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  // Theme management
+  const { theme } = useTheme();
+  // State management for username and password
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
+  // Function to handle login
   const handleLogin = async () => {
     if (!username || !password) {
-      Alert.alert('Error', 'Please enter both email and password.');
+      Alert.alert("Error", "Please enter both email and password.");
       return;
     }
 
     // You can replace this with your actual backend call
-    console.log('Logging in with:', { username, password });
+    console.log("Logging in with:", { username, password });
     try {
-    const response = await fetch('http://127.0.0.1:8000/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        user_name: username,
-        password: password,
-      }),
-    });
+      const response = await fetch("http://127.0.0.1:8000/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_name: username,
+          password: password,
+        }),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.detail || 'Login failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Login failed");
+      }
+
+      const data = await response.json();
+      console.log("Login success:", data);
+      // Store the token securely
+      await SecureStore.setItemAsync("access_token", data.access_token);
+      Alert.alert("Success", "Logged in successfully!");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      Alert.alert("Error", error.message);
     }
-
-    const data = await response.json();
-    console.log('Login success:', data);
-    Alert.alert('Success', 'Logged in successfully!');
-    // You could also store user_id, redirect, etc.
-  } catch (error: any) {
-    console.error('Login error:', error);
-    Alert.alert('Error', error.message);
-  }
-    Alert.alert('Login clicked', 'You can now connect this to your FastAPI backend.');
+    
+    Alert.alert(
+      "Login clicked",
+      "You can now connect this to your FastAPI backend."
+    );
   };
 
   return (
@@ -70,7 +88,14 @@ const LoginPage = () => {
         <Text style={getStyles(theme).buttonText}>Log In</Text>
       </TouchableOpacity>
       <Link href={"/registration"} asChild>
-        <Text style={{ color: theme === 'dark' ? darkThemeColors.text : lightThemeColors.text, textAlign: 'center', marginTop: 16 }}>
+        <Text
+          style={{
+            color:
+              theme === "dark" ? darkThemeColors.text : lightThemeColors.text,
+            textAlign: "center",
+            marginTop: 16,
+          }}
+        >
           Don't have an account? Register
         </Text>
       </Link>
@@ -80,39 +105,44 @@ const LoginPage = () => {
 
 export default LoginPage;
 
-const getStyles = (theme: 'light' | 'dark') => StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-    backgroundColor: theme === 'dark' ? darkThemeColors.background : lightThemeColors.background,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '600',
-    marginBottom: 24,
-    textAlign: 'center',
-    color: theme === 'dark' ? darkThemeColors.text : lightThemeColors.text,
-  },
-  input: {
-    height: 48,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginBottom: 16,
-    color: theme === 'dark' ? darkThemeColors.text : lightThemeColors.text,
-  },
-  button: {
-    backgroundColor: theme === 'dark' ? darkThemeColors.primary : lightThemeColors.primary,
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  buttonText: {
-    color: theme === 'dark' ? darkThemeColors.text : lightThemeColors.text,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-});
+const getStyles = (theme: "light" | "dark") =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 24,
+      justifyContent: "center",
+      backgroundColor:
+        theme === "dark"
+          ? darkThemeColors.background
+          : lightThemeColors.background,
+    },
+    title: {
+      fontSize: 28,
+      fontWeight: "600",
+      marginBottom: 24,
+      textAlign: "center",
+      color: theme === "dark" ? darkThemeColors.text : lightThemeColors.text,
+    },
+    input: {
+      height: 48,
+      borderColor: "#ccc",
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      marginBottom: 16,
+      color: theme === "dark" ? darkThemeColors.text : lightThemeColors.text,
+    },
+    button: {
+      backgroundColor:
+        theme === "dark" ? darkThemeColors.primary : lightThemeColors.primary,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: "center",
+      marginTop: 12,
+    },
+    buttonText: {
+      color: theme === "dark" ? darkThemeColors.text : lightThemeColors.text,
+      fontSize: 16,
+      fontWeight: "500",
+    },
+  });
