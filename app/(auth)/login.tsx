@@ -1,18 +1,15 @@
 import { darkThemeColors, lightThemeColors } from "@/constants";
+import { useAuth } from "@/hooks/AuthContext";
 import { useTheme } from "@/hooks/ThemeContext";
 import { Link } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-
-// Authentication token management
-import * as SecureStore from "expo-secure-store";
 
 const LoginPage = () => {
   // Theme management
@@ -21,47 +18,8 @@ const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  // Function to handle login
-  const handleLogin = async () => {
-    if (!username || !password) {
-      Alert.alert("Error", "Please enter both email and password.");
-      return;
-    }
-
-    // You can replace this with your actual backend call
-    console.log("Logging in with:", { username, password });
-    try {
-      const response = await fetch("http://127.0.0.1:8000/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_name: username,
-          password: password,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || "Login failed");
-      }
-
-      const data = await response.json();
-      console.log("Login success:", data);
-      // Store the token securely
-      await SecureStore.setItemAsync("access_token", data.access_token);
-      Alert.alert("Success", "Logged in successfully!");
-    } catch (error: any) {
-      console.error("Login error:", error);
-      Alert.alert("Error", error.message);
-    }
-    
-    Alert.alert(
-      "Login clicked",
-      "You can now connect this to your FastAPI backend."
-    );
-  };
+  // Authentication context
+  const { login, isLoading, error } = useAuth();
 
   return (
     <View style={getStyles(theme).container}>
@@ -84,8 +42,15 @@ const LoginPage = () => {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={getStyles(theme).button} onPress={handleLogin}>
-        <Text style={getStyles(theme).buttonText}>Log In</Text>
+      {error && <Text style={{ color: "red", marginBottom: 8 }}>{error}</Text>}
+
+      <TouchableOpacity
+        style={getStyles(theme).button}
+        onPress={() => login(username, password)}
+      >
+        <Text style={getStyles(theme).buttonText}>
+          {isLoading ? "Logging in..." : "Log In"}
+        </Text>
       </TouchableOpacity>
       <Link href={"/registration"} asChild>
         <Text

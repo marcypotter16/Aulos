@@ -1,3 +1,4 @@
+import { StorageUtils } from '@/app/StorageUtils';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
@@ -10,7 +11,7 @@ export function useAuthGuard(redirectTo: string = '/login') {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = await SecureStore.getItemAsync('access_token');
+      const token = await StorageUtils.getItem('access_token');
 
       if (!token) {
         Alert.alert('Unauthorized', 'Please log in first.');

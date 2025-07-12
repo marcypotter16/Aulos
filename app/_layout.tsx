@@ -1,3 +1,4 @@
+import { AuthProvider } from "@/hooks/AuthContext";
 import { ThemeProvider } from "@/hooks/ThemeContext";
 import { Slot } from "expo-router";
 /**
@@ -9,7 +10,9 @@ import { Slot } from "expo-router";
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <Slot /> {/* This will now include TabsLayout and all screens, it's basically a placeholder for the entire app */}
+      <AuthProvider>
+        <Slot /> {/* This will now include TabsLayout and all screens, it's basically a placeholder for the entire app */}
+      </AuthProvider>
     </ThemeProvider>
   );
 }
