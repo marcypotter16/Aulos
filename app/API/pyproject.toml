@@ -1,7 +1,21 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "api"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+  "uvicorn",
+  "fastapi",
+  "sqlalchemy",
+  "bcrypt",
+  "python-jose",
+  "python-dotenv",
+  "pydantic[email]",
+  "python-multipart",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["db", "models", "routers", "schemas"]
