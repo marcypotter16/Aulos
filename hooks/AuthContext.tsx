@@ -1,6 +1,8 @@
-import { StorageUtils } from "@/app/StorageUtils";
+import { StorageUtils } from "@/app/utils/StorageUtils";
+import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import Toast from "react-native-toast-message";
 
 interface AuthContextType {
   token: string | null;
@@ -52,8 +54,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       await StorageUtils.setItem("access_token", data.access_token);
       setToken(data.access_token);
+      Toast.show({
+        type: "success",
+        text1: "Login Successful",
+        text2: "Welcome back!",
+      });
+
+      // Redirect
+      router.replace("/");
     } catch (error: any) {
       console.error("Login error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: error.message || "An error occurred during login.",
+      })
       setError(error.message);
     } finally {
       setIsLoading(false);

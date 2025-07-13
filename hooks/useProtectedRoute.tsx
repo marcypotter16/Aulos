@@ -1,10 +1,10 @@
-import { StorageUtils } from '@/app/StorageUtils';
+import { StorageUtils } from '@/app/utils/StorageUtils';
+import { API_URL } from '@/constants';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import Toast from 'react-native-toast-message';
 
-export function useAuthGuard(redirectTo: string = '/login') {
+export function useProtectedRoute(redirectTo: string = '/login') {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
@@ -14,14 +14,20 @@ export function useAuthGuard(redirectTo: string = '/login') {
       const token = await StorageUtils.getItem('access_token');
 
       if (!token) {
-        Alert.alert('Unauthorized', 'Please log in first.');
+        Toast.show({
+          type: 'error',
+          text1: 'Unauthorized', 
+          text2: 'Please log in first.'});
         router.replace(redirectTo as any); // push or replace depending on your flow
         return;
       }
 
       // Optional: validate token with backend
       try {
-        const res = await fetch('http://127.0.0.1/profile', {
+        console.log('Validating token with backend...');
+        console.log('API URL:', API_URL);
+        console.log('Token:', token);
+        const res = await fetch(API_URL + '/users/profile', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -29,10 +35,15 @@ export function useAuthGuard(redirectTo: string = '/login') {
 
         if (!res.ok) throw new Error('Invalid or expired token');
 
+        console.log('Token is valid');
         setIsAuthenticated(true);
       } catch (err) {
-        await SecureStore.deleteItemAsync('access_token');
-        Alert.alert('Session expired', 'Please log in again.');
+        await StorageUtils.deleteItem('access_token');
+        Toast.show({
+          type: 'error',
+          text1: 'Session expired',
+          text2: 'Please log in again.',
+        });
         router.replace(redirectTo as any);
       } finally {
         setIsLoading(false);

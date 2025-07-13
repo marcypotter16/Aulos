@@ -1,6 +1,7 @@
 import { AuthProvider } from "@/hooks/AuthContext";
 import { ThemeProvider } from "@/hooks/ThemeContext";
 import { Slot } from "expo-router";
+import Toast from "react-native-toast-message";
 /**
  * This is the root layout for the app.
  * It wraps the entire application in a ThemeProvider so that we can use light and dark themes.
@@ -12,6 +13,7 @@ export default function RootLayout() {
     <ThemeProvider>
       <AuthProvider>
         <Slot /> {/* This will now include TabsLayout and all screens, it's basically a placeholder for the entire app */}
+        <Toast /> {/* Toast component for displaying messages */}
       </AuthProvider>
     </ThemeProvider>
   );

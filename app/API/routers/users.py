@@ -39,6 +39,7 @@ def get_user_profile(current_user: str = Depends(get_current_user), db: Session 
         "email": user.email,
         "instrument": user.instrument,
         "genre": user.genre,
+        "avatar_url": user.avatar_url,
         # "bio": user.bio,  # if you have one
         # any other profile fields you want to expose
     }

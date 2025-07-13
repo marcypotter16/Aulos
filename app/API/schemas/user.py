@@ -6,6 +6,7 @@ class UserBase(BaseModel):
     email: EmailStr
     instrument: str
     genre: str
+    avatar_url: str | None = None
 
 class UserCreate(UserBase):
     password: str

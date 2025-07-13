@@ -26,7 +26,7 @@ export default function HeaderRightButtons() {
             />
           </TouchableOpacity>
         <TouchableOpacity
-            onPress={() => router.push('/login')}
+            onPress={() => router.push('/profile')}
             style={{
               marginRight: 15,
               padding: 6,
@@ -34,7 +34,7 @@ export default function HeaderRightButtons() {
               backgroundColor: isDark ? '#333' : '#ddd',
             }}
           >
-            <Ionicons name='log-in' size={20} color={isDark ? 'white' : 'black'} />
+            <Ionicons name='person-circle-outline' size={20} color={isDark ? '#facc15' : '#1e3a8a'} />
         </TouchableOpacity>
     </View>
   );

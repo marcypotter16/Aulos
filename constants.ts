@@ -15,3 +15,5 @@ export const lightThemeColors = {
     surface: '#FFFFFF',
     text: '#111827',
 }
+
+export const API_URL = process.env.API_URL || 'http://127.0.0.1:8000'

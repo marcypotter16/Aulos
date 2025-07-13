@@ -1,4 +1,5 @@
 import PostCard from '@/components/PostCard/PostCard';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import Post from '@/models/post';
 import { Review } from '@/models/review';
 import User from '@/models/user';
@@ -44,6 +45,7 @@ const mockPosts: Post[] = [
 ];
 
 export default function ProfileScreen() {
+  const { isAuthenticated } = useProtectedRoute();
   return (
     // This is all provvisionary data, replace with real user and posts data
     <ScrollView style={styles.container}>

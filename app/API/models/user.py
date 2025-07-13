@@ -9,5 +9,6 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password_hash = Column(String)
     name = Column(String, index=True)
+    avatar_url = Column(String, nullable=True)
     instrument = Column(String, index=True)
     genre = Column(String, index=True)
