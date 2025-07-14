@@ -16,7 +16,7 @@ export default function LoginLayout() {
             <Stack.Screen name="login" options={{ headerTitle: "", headerShown: true, 
                 headerLeft: () => <HomeButton theme={theme}
                 /> }} />
-            <Stack.Screen name="register" options={{ title: 'Register' }} />
+            <Stack.Screen name="register" options={{ title: 'Register', headerTitle: "", headerShown: false }} />
             <Stack.Screen name="forgot-password" options={{ title: 'Forgot Password' }} />
             <Stack.Screen name="reset-password" options={{ title: 'Reset Password' }} />
             <Stack.Screen name="terms-of-service" options={{ title: 'Terms of Service' }} />

@@ -4,8 +4,8 @@ class UserBase(BaseModel):
     name: str
     user_name: str
     email: EmailStr
-    instrument: str
-    genre: str
+    instrument: str | None = None
+    genre: str | None = None
     avatar_url: str | None = None
 
 class UserCreate(UserBase):
