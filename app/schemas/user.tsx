@@ -14,3 +14,7 @@ export interface UserCreate extends UserBase {
 export interface UserResponse extends UserBase {
     id: number;
 }
+
+export interface UserAuthenticated extends UserResponse {
+    
+}

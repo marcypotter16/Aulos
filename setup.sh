@@ -7,11 +7,11 @@ echo "→ Setting up backend…"
 cd API
 uv venv .
 source .venv/bin/activate
-uv sync
+uv pip install .
 
 # 2. Frontend
 echo "→ Installing frontend deps…"
 cd ..
 npm install
 
-echo "✅ All set! Run 'cd API && uv run uvicorn main:app' in one terminal and 'npx expo start' in another."
+echo "✅ All set! Run 'cd API && PYTHONPATH=src uvicorn main:app --reload' in one terminal and 'npx expo start' in another."

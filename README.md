@@ -16,6 +16,12 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
 - **uv** (Python package/environment manager)  
   👉 Install it via `pip install uv`
+  or in bash:
+  ```bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    source ~/.bashrc  # or ~/.zshrc depending on your shell
+  ```
+  The latter approach doesn't even require python to be installed (only works on Linux as far as I know)
 
 ---
 
@@ -49,12 +55,15 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    uv sync  # or `uv install` for older versions
 
    # Run the FastAPI server
-   uv run uvicorn main:app --reload
+   PYTHONPATH=src uv run uvicorn main:app --reload
+
+   # Or if in powershell
+   $env:PYTHONPATH="src"; python3 -m uv run uvicorn main:app --reload
    ```
 
 ---
 
-### 🐧 Linux (or macOS)
+### 🐧 Linux
 
 You can run the setup script:
 

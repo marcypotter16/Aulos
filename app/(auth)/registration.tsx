@@ -1,38 +1,50 @@
 import { darkThemeColors, lightThemeColors } from '@/constants';
 import { useTheme } from '@/hooks/ThemeContext';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { Link, router } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import * as yup from 'yup';
 import { UserCreate } from '../schemas/user';
 
-const register = async (name: string, email: string, user_name: string, password: string, instrument: string | undefined, genre: string | undefined): Promise<void> => {
-  const user: UserCreate = {
-    name: name,
-    email,
-    user_name,
-    password,
-    instrument: instrument || null,
-    genre: genre || null,
-  };
-  
+const registrationSchema = yup.object().shape({
+  name: yup.string().required('Name is required'),
+  email: yup.string().email('Invalid email').required('Email is required'),
+  user_name: yup.string().required('Username is required'),
+  password: yup.string().min(6, 'Password must be at least 6 characters').required('Password is required'),
+  instrument: yup.string().optional(),
+  genre: yup.string().optional(),
+});
+
+const register = async (userData: UserCreate): Promise<void> => {
   try {
     const response = await fetch("http://127.0.0.1:8000/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(user),
+      body: JSON.stringify({
+        ...userData,
+        // Optional: normalize empty strings to undefined
+        instrument: userData.instrument || undefined,
+        genre: userData.genre || undefined,
+      }),
     });
-    
+
     const data = await response.json();
-    if (!response.ok) throw new Error(data.detail || "Registration failed");
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Registration failed");
+    }
+
     Toast.show({
       type: "success",
       text1: "Registration Successful",
       text2: "You can now log in with your credentials.",
-    })
-    router.replace("/login");
+    });
+    router.replace("/login")
   } catch (error: any) {
     console.error("Registration error:", error);
     Toast.show({
@@ -44,87 +56,62 @@ const register = async (name: string, email: string, user_name: string, password
   }
 };
 
+
 const Registration = () => {
-  const { theme } = useTheme(); // 'light' or 'dark'
+  const { theme } = useTheme();
   const styles = getStyles(theme);
 
-  const [email, setEmail] = useState('');
-  const [user_name, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [instrument, setInstrument] = useState('');
-  const [genre, setGenre] = useState('');
-  const [name, setName] = useState('');
+  const { control, handleSubmit, formState: { errors } } = useForm({
+    resolver: yupResolver(registrationSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      user_name: '',
+      password: '',
+      instrument: '',
+      genre: '',
+    },
+  });
+
+  const onSubmit = async (data: any) => {
+    try {
+      await register(data);
+    } catch (e) {
+      // already handled
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create an Account</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        placeholderTextColor={styles.placeholder.color}
-        autoCapitalize="words"
-        value={name}
-        onChangeText={setName}
-      />
+      {(['name', 'email', 'user_name', 'instrument', 'genre', 'password'] as const).map((field) => (
+        <Controller
+          key={field}
+          control={control}
+          name={field}
+          render={({ field: { onChange, value } }) => (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder={field === 'user_name' ? 'Username' : field.charAt(0).toUpperCase() + field.slice(1)}
+                placeholderTextColor={styles.placeholder.color}
+                secureTextEntry={field === 'password'}
+                value={value}
+                onChangeText={onChange}
+                autoCapitalize="none"
+              />
+              {errors[field] && (
+                <Text style={{ color: 'red', marginBottom: 8 }}>
+                  {errors[field]?.message as string}
+                </Text>
+              )}
+            </>
+          )}
+        />
+      ))}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor={styles.placeholder.color}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        placeholderTextColor={styles.placeholder.color}
-        autoCapitalize="none"
-        value={user_name}
-        onChangeText={setUsername}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Instrument"
-        placeholderTextColor={styles.placeholder.color}
-        autoCapitalize="none"
-        value={instrument}
-        onChangeText={setInstrument}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Genre"
-        placeholderTextColor={styles.placeholder.color}
-        autoCapitalize="none"
-        value={genre}
-        onChangeText={setGenre}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor={styles.placeholder.color}
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={async () => {
-          try {
-            await register(name, email, user_name, password, instrument, genre);
-          } catch (e) {
-            // Error handled in register
-          }
-        }}
-      >
+      <TouchableOpacity style={styles.button} onPress={handleSubmit(onSubmit)}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
 
@@ -136,6 +123,7 @@ const Registration = () => {
 };
 
 export default Registration;
+
 
 const getStyles = (theme: 'light' | 'dark') => {
   const colors = theme === 'light' ? lightThemeColors : darkThemeColors;

@@ -1,11 +1,10 @@
 import PostCard from '@/components/PostCard/PostCard';
 import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import Post from '@/models/post';
-import { Review } from '@/models/review';
 import User from '@/models/user';
 import { Link } from 'expo-router';
 import React from 'react';
-import { FlatList, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const mockUser: User = {
   id: '1',
@@ -45,18 +44,20 @@ const mockPosts: Post[] = [
 ];
 
 export default function ProfileScreen() {
-  const { isAuthenticated } = useProtectedRoute();
+  const { isAuthenticated, user } = useProtectedRoute();
+
+
   return (
     // This is all provvisionary data, replace with real user and posts data
     <ScrollView style={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
-        <Image source={{ uri: mockUser.profilePicture }} style={styles.avatar} />
-        <Text style={styles.name}>{mockUser.name}</Text>
-        <Text style={styles.username}>@{mockUser.username}</Text>
-        <Text style={styles.instrument}>{mockUser.playedInstruments![0]}</Text>
-        {mockUser.bio && <Text style={styles.bio}>{mockUser.bio}</Text>}
-        {mockUser.rating && <Text style={styles.rating}>⭐ {mockUser.rating.toFixed(1)}</Text>}
+        {/* <Image source={{ uri: user?.avatar_url }} style={styles.avatar} /> */}
+        <Text style={styles.name}>{user?.name}</Text>
+        <Text style={styles.username}>@{user?.user_name}</Text>
+        <Text style={styles.instrument}>{user?.instrument}</Text>
+        {/* {user.bio && <Text style={styles.bio}>{user?.bio}</Text>} */}
+        {/* {user.rating && <Text style={styles.rating}>⭐ {user.rating.toFixed(1)}</Text>} */}
       </View>
 
       {/* Media Posts */}
@@ -72,13 +73,13 @@ export default function ProfileScreen() {
       {/* Reviews Preview */}
       <View style={styles.reviewSection}>
         <Text style={styles.sectionTitle}>Reviews</Text>
-        {mockUser.reviews?.slice(0, 2).map((review: Review) => (
+        {/* {user.reviews?.slice(0, 2).map((review: Review) => (
           <View key={review.id} style={styles.reviewCard}>
             <Text style={styles.reviewAuthor}>{review.authorName}</Text>
             <Text style={styles.reviewText}>{review.content}</Text>
             <Text style={styles.reviewRating}>⭐ {review.rating}</Text>
           </View>
-        ))}
+        ))} */}
         <Link href="/(tabs)/profile/reviews" asChild>
           <TouchableOpacity>
             <Text style={styles.link}>View all reviews</Text>

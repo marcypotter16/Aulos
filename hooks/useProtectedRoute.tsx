@@ -1,3 +1,4 @@
+import { UserAuthenticated } from '@/app/schemas/user';
 import { StorageUtils } from '@/app/utils/StorageUtils';
 import { API_URL } from '@/constants';
 import { useRouter } from 'expo-router';
@@ -7,6 +8,7 @@ import Toast from 'react-native-toast-message';
 export function useProtectedRoute(redirectTo: string = '/login') {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<UserAuthenticated | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -22,7 +24,6 @@ export function useProtectedRoute(redirectTo: string = '/login') {
         return;
       }
 
-      // Optional: validate token with backend
       try {
         console.log('Validating token with backend...');
         console.log('API URL:', API_URL);
@@ -37,6 +38,7 @@ export function useProtectedRoute(redirectTo: string = '/login') {
 
         console.log('Token is valid');
         setIsAuthenticated(true);
+        setUser(await res.json() as UserAuthenticated);
       } catch (err) {
         await StorageUtils.deleteItem('access_token');
         Toast.show({
@@ -53,5 +55,5 @@ export function useProtectedRoute(redirectTo: string = '/login') {
     checkAuth();
   }, []);
 
-  return { isLoading, isAuthenticated };
+  return { isLoading, isAuthenticated, user };
 }
