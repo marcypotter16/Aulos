@@ -1,4 +1,0 @@
-db
-models
-routers
-schemas
