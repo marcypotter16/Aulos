@@ -1,5 +1,6 @@
 import { darkThemeColors, lightThemeColors } from '@/constants';
 import { useTheme } from '@/hooks/ThemeContext';
+import { supabase } from '@/supabase';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Link, router } from 'expo-router';
 import React from 'react';
@@ -20,31 +21,29 @@ const registrationSchema = yup.object().shape({
 
 const register = async (userData: UserCreate): Promise<void> => {
   try {
-    const response = await fetch("http://127.0.0.1:8000/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const { data, error } = await supabase.auth.signUp({
+      email: userData.email,
+      password: userData.password,
+      options: {
+        data: {
+          user_name: userData.user_name,
+          name: userData.name,
+          instrument: userData.instrument || null,
+          genre: userData.genre || null,
+        },
       },
-      body: JSON.stringify({
-        ...userData,
-        // Optional: normalize empty strings to undefined
-        instrument: userData.instrument || undefined,
-        genre: userData.genre || undefined,
-      }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.detail || "Registration failed");
+    if (error) {
+      throw error;
     }
 
     Toast.show({
       type: "success",
       text1: "Registration Successful",
-      text2: "You can now log in with your credentials.",
+      text2: "Please check your email to confirm your account.",
     });
-    router.replace("/login")
+    router.replace("/login");
   } catch (error: any) {
     console.error("Registration error:", error);
     Toast.show({
@@ -55,6 +54,7 @@ const register = async (userData: UserCreate): Promise<void> => {
     throw error;
   }
 };
+
 
 
 const Registration = () => {

@@ -1,8 +1,9 @@
-import { uploadProfilePic } from "@/app/utils/SupabaseClient";
 import PostCard from "@/components/PostCard/PostCard";
-import { useProtectedRoute } from "@/hooks/useProtectedRoute";
+import { useAuth } from "@/hooks/AuthContext";
+import { useRedirectIfUnauthenticated } from "@/hooks/useRedirectIfNotAuthenticated";
 import Post from "@/models/post";
 import User from "@/models/user";
+import { uploadProfilePic } from "@/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Link, router } from "expo-router";
@@ -76,8 +77,11 @@ const mockPosts: Post[] = [
 ];
 
 export default function ProfileScreen() {
-  const { isAuthenticated, user } = useProtectedRoute();
+  const { isLoading } = useRedirectIfUnauthenticated();
+  const { user } = useAuth();
   const [showZoomedAvatar, setShowZoomedAvatar] = useState(false);
+
+  if (isLoading || !user) return <Text>Loading...</Text>;
 
   const handlePickImage = async () => {
       console.log("Picking Image...")

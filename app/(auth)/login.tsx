@@ -1,7 +1,8 @@
 import { darkThemeColors, lightThemeColors } from "@/constants";
 import { useAuth } from "@/hooks/AuthContext";
 import { useTheme } from "@/hooks/ThemeContext";
-import { Link } from "expo-router";
+import { supabase } from "@/supabase";
+import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import {
   StyleSheet,
@@ -10,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 const LoginPage = () => {
   // Theme management
@@ -17,9 +19,55 @@ const LoginPage = () => {
   // State management for username and password
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const { isLoading: authLoading } = useAuth();
 
   // Authentication context
-  const { login, isLoading, error } = useAuth();
+  const handleLogin = async () => {
+    setLocalError(null);
+    setIsLoggingIn(true);
+
+    try {
+      let emailToUse = username.trim();
+
+      // If it's a username (not an email), look up the email
+      if (!username.includes("@")) {
+        // The data should be the actual email!
+        const { data, error } = await supabase.rpc("lookup_email_by_username", {
+          uname: username.trim(),
+        });
+
+        console.log(data, error);
+
+        if (error || !data) {
+          throw new Error("Invalid username or password");
+        }
+
+        emailToUse = data;
+      }
+
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: emailToUse,
+        password,
+      });
+
+      if (loginError) {
+        throw loginError;
+      }
+
+      router.replace("/");
+    } catch (err: any) {
+      setLocalError(err.message || "Login failed");
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: err.message || "Invalid credentials.",
+      });
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   return (
     <View style={getStyles(theme).container}>
@@ -42,14 +90,13 @@ const LoginPage = () => {
         onChangeText={setPassword}
       />
 
-      {error && <Text style={{ color: "red", marginBottom: 8 }}>{error}</Text>}
+      {localError && (
+        <Text style={{ color: "red", marginBottom: 8 }}>{localError}</Text>
+      )}
 
-      <TouchableOpacity
-        style={getStyles(theme).button}
-        onPress={() => login(username, password)}
-      >
+      <TouchableOpacity style={getStyles(theme).button} onPress={handleLogin}>
         <Text style={getStyles(theme).buttonText}>
-          {isLoading ? "Logging in..." : "Log In"}
+          {isLoggingIn || authLoading ? "Logging in..." : "Log In"}
         </Text>
       </TouchableOpacity>
       <Link href={"/registration"} asChild>

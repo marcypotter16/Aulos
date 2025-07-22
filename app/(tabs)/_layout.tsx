@@ -50,7 +50,6 @@ export default function TabsLayout() {
             headerRight: () => <HeaderRightButtons />,
           }}
         />
-        {/* This is the home screen, which is the first tab */}
         <Tabs.Screen
           name="search"
           options={{ 

@@ -1,94 +1,81 @@
-import { StorageUtils } from "@/app/utils/StorageUtils";
-import { router } from "expo-router";
-import * as SecureStore from "expo-secure-store";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import Toast from "react-native-toast-message";
+// hooks/AuthContext.tsx
+import { supabase } from "@/supabase";
+import { createContext, useContext, useEffect, useState } from "react";
 
-interface AuthContextType {
-  token: string | null;
+type UserProfile = {
+  id: string;
+  user_name: string;
+  email: string;
+  name?: string;
+  instrument?: string;
+  genre?: string;
+  avatar_url?: string;
+};
+
+type AuthContextType = {
+  user: UserProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  error: string | null;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-}
+};
 
 const AuthContext = createContext<AuthContextType>({
-  token: null,
+  user: null,
   isAuthenticated: false,
-  isLoading: false,
-  error: null,
-  login: async () => {},
-  logout: async () => {},
+  isLoading: true,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const loadToken = async () => {
-      const stored = await StorageUtils.getItem("access_token");
-      if (stored) setToken(stored);
+  const fetchProfile = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      setUser(null);
       setIsLoading(false);
-    };
-    loadToken();
-  }, []);
-
-  const login = async (username: string, password: string) => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      const response = await fetch("http://127.0.0.1:8000/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ username, password }).toString(),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.detail || "Login failed");
-
-      await StorageUtils.setItem("access_token", data.access_token);
-      setToken(data.access_token);
-      Toast.show({
-        type: "success",
-        text1: "Login Successful",
-        text2: "Welcome back!",
-      });
-
-      // Redirect
-      router.replace("/");
-    } catch (error: any) {
-      console.error("Login error:", error);
-      Toast.show({
-        type: "error",
-        text1: "Login Failed",
-        text2: error.message || "An error occurred during login.",
-      })
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
+      return;
     }
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", session.user.id)
+      .single();
+
+    if (data && !error) {
+      setUser(data);
+    } else {
+      setUser(null);
+    }
+
+    setIsLoading(false);
   };
 
-  const logout = async () => {
-    await SecureStore.deleteItemAsync("access_token");
-    setToken(null);
-  };
+  useEffect(() => {
+    fetchProfile(); // initial session check
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+      if (!session) {
+        setUser(null);
+      } else {
+        fetchProfile(); // fetch updated user
+      }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   return (
     <AuthContext.Provider
       value={{
-        token,
-        error,
-        isAuthenticated: !!token,
+        user,
+        isAuthenticated: !!user,
         isLoading,
-        login,
-        logout,
       }}
     >
       {children}
@@ -99,3 +86,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 export const useAuth = () => useContext(AuthContext);
 
 
+// export function useAuth() {
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+
+//   const login = async (emailOrUsername: string, password: string) => {
+//     setIsLoading(true);
+//     setError(null);
+
+//     try {
+//       // Try login with email
+//       let { data, error } = await supabase.auth.signInWithPassword({
+//         email: emailOrUsername,
+//         password,
+//       });
+
+//       // Fallback: if login fails and the input wasn’t an email, try username lookup
+//       if (error && !emailOrUsername.includes("@")) {
+//         const userRes = await supabase
+//           .from("users")
+//           .select("email")
+//           .eq("user_name", emailOrUsername)
+//           .single();
+
+//         if (userRes.error || !userRes.data?.email) {
+//           throw new Error("Invalid username or password");
+//         }
+
+//         const { error: secondTryError } = await supabase.auth.signInWithPassword({
+//           email: userRes.data.email,
+//           password,
+//         });
+
+//         if (secondTryError) throw secondTryError;
+//       } else if (error) {
+//         throw error;
+//       }
+
+//       router.replace("/"); // or your home screen
+//     } catch (err: any) {
+//       setError(err.message || "Login failed");
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   return { login, isLoading, error };
+// }
