@@ -4,7 +4,7 @@ export interface UserBase {
     email: string;
     instrument?: string | null;
     genre?: string | null;
-    avatar_url?: string | null;
+    avatar_url?: string | undefined;
 }
 
 export interface UserCreate extends UserBase {

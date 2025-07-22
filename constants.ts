@@ -1,3 +1,4 @@
+
 export const darkThemeColors = {
     primary: '#8B5CF6',
     secondary: '#94a3b8',
