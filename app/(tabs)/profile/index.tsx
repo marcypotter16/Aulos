@@ -1,15 +1,11 @@
-import PostCard from "@/components/PostCard/PostCard";
 import { useAuth } from "@/hooks/AuthContext";
 import { useRedirectIfUnauthenticated } from "@/hooks/useRedirectIfNotAuthenticated";
-import Post from "@/models/post";
-import User from "@/models/user";
-import { uploadProfilePic } from "@/supabase";
+import { supabase } from "@/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import {
-  FlatList,
   Image,
   Modal,
   ScrollView,
@@ -20,61 +16,35 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 
-const mockUser: User = {
-  id: "1",
-  name: "Alex Drummer",
-  username: "alex.drummer",
-  email: "",
-  password: "",
-  createdAt: Date.now(),
-  profilePicture: "https://placehold.co/100x100",
-  playedInstruments: ["Drums"],
-  bio: "Session drummer | Jazz & Funk | Available for gigs",
-  rating: 4.8,
-  reviews: [
-    {
-      id: "r1",
-      authorId: "author1",
-      authorName: "John D.",
-      reviewedId: "1",
-      content: "Amazing timing and great energy live!",
-      rating: 5,
-    },
-    {
-      id: "r2",
-      authorId: "author2",
-      authorName: "Sarah M.",
-      reviewedId: "1",
-      content: "Solid drummer, super easy to work with.",
-      rating: 4.5,
-    },
-  ],
-};
+async function uploadProfilePic(file: Blob, userId: string): Promise<string> {
+  const filePath = `user_${userId}.jpg`;
 
+  const {
+    data: { user },
+    error: getUserError,
+  } = await supabase.auth.getUser();
+  console.log(user, getUserError);
 
-const mockPosts: Post[] = [
-  {
-    id: "1",
-    userId: "1",
-    type: "video",
-    uri: "https://example.com/video1.mp4",
-    createdAt: "2024-06-01",
-  },
-  {
-    id: "2",
-    userId: "1",
-    type: "audio",
-    uri: "https://example.com/audio1.mp3",
-    createdAt: "2024-06-05",
-  },
-  {
-    id: "3",
-    userId: "1",
-    type: "video",
-    uri: "https://example.com/video2.mp4",
-    createdAt: "2024-06-07",
-  },
-];
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from("avatars")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: true,
+    });
+
+  if (uploadError) {
+    Toast.show({
+      type: "error",
+      text1: "Error uploading profile picture:",
+      text2: uploadError.message,
+    });
+    throw uploadError;
+  }
+
+  const response = supabase.storage.from("avatars").getPublicUrl(filePath);
+
+  return response.data.publicUrl;
+}
 
 export default function ProfileScreen() {
   const { isLoading } = useRedirectIfUnauthenticated();
@@ -84,33 +54,42 @@ export default function ProfileScreen() {
   if (isLoading || !user) return <Text>Loading...</Text>;
 
   const handlePickImage = async () => {
-      console.log("Picking Image...")
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true,
-        base64: false,
-        quality: 0.8,
-      });
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      base64: false,
+      quality: 0.8,
+    });
 
-      console.log(result)
-  
-      if (!result.canceled) {
-        console.log("Image picked: " + result)
-        const uri = result.assets[0].uri;
-        const response = await fetch(uri);
-        const blob = await response.blob();
-        const url = await uploadProfilePic(blob, user!.id!.toString());
-        // Reload page
-        router.replace("/(tabs)/profile");
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const url = await uploadProfilePic(blob, user!.id!.toString());
+
+      // Update DB only if avatar_url is currently null or empty
+      if (!user.avatar_url) {
+        console.log(url, user.id)
+        const { error: updateError } = await supabase
+          .from("users")
+          .update({ avatar_url: url })
+          .eq("id", user.id);
+
+        if (updateError) {
+          console.error("Failed to update avatar_url:", updateError.message);
+        }
       }
-      else {
-        Toast.show({
-          type: "info",
-          text1: "Image picking canceled"
-        })
-        console.log("Image picking canceled")
-      }
-    };
+
+      // Reload page
+      router.replace("/(tabs)/profile");
+    } else {
+      Toast.show({
+        type: "info",
+        text1: "Image picking canceled",
+      });
+      console.log("Image picking canceled");
+    }
+  };
 
   return (
     // This is all provvisionary data, replace with real user and posts data
@@ -139,7 +118,11 @@ export default function ProfileScreen() {
         {/* {user.bio && <Text style={styles.bio}>{user?.bio}</Text>} */}
         {/* {user.rating && <Text style={styles.rating}>⭐ {user.rating.toFixed(1)}</Text>} */}
         {/* Zoom Modal */}
-        <Modal visible={showZoomedAvatar} transparent={true} animationType="fade">
+        <Modal
+          visible={showZoomedAvatar}
+          transparent={true}
+          animationType="fade"
+        >
           <TouchableOpacity
             style={styles.modalOverlay}
             onPress={() => setShowZoomedAvatar(false)}
@@ -159,13 +142,13 @@ export default function ProfileScreen() {
 
       {/* Media Posts */}
       <Text style={styles.sectionTitle}>Performances</Text>
-      <FlatList
+      {/* <FlatList
         data={mockPosts}
         renderItem={({ item }) => <PostCard post={item} />}
         keyExtractor={(item) => item.id}
         numColumns={3}
         scrollEnabled={false}
-      />
+      /> */}
 
       {/* Reviews Preview */}
       <View style={styles.reviewSection}>
@@ -270,12 +253,12 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: '#000000aa',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#000000aa",
+    alignItems: "center",
+    justifyContent: "center",
   },
   zoomedImage: {
-    width: '90%',
-    height: '70%',
+    width: "90%",
+    height: "70%",
   },
 });
