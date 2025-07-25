@@ -17,76 +17,97 @@ export default function TabsLayout() {
   // and the background color of the tab bar, accordingly to the theme.
   const colorScheme = theme === 'dark' ? darkThemeColors : lightThemeColors;
   return (
-      <Tabs
-        screenOptions={{
-          tabBarActiveTintColor: colorScheme.primary,
-          tabBarInactiveTintColor: colorScheme.secondary,
-          tabBarStyle: {
-            backgroundColor: colorScheme.background,
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: colorScheme.primary,
+        tabBarInactiveTintColor: colorScheme.secondary,
+        tabBarStyle: {
+          backgroundColor: colorScheme.background,
+        },
+      }}>
+      <Tabs.Screen
+        name="index"
+        // You can customize the header with a button to toggle theme
+        options={{
+          title: "Home",
+          headerStyle: {
+            backgroundColor: colorScheme.surface,
           },
-        }}>
-        <Tabs.Screen
-          name="index"
-          // You can customize the header with a button to toggle theme
-          options={{ 
-            title: "Home",
-            headerStyle: {
-              backgroundColor: colorScheme.surface,
-            },
-            // headerTintColor: colorScheme.text,
-            headerTitleStyle: {
-              backgroundColor: colorScheme.surface,
-              color: colorScheme.text,
-            },
-            tabBarIcon: ({ color, size, focused }) => (
-              <Ionicons
-                name={focused ? "home" : "home-outline"}
-                size={size}
-                color={color}
-              />
-            ),
+          // headerTintColor: colorScheme.text,
+          headerTitleStyle: {
+            backgroundColor: colorScheme.surface,
+            color: colorScheme.text,
+          },
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={size}
+              color={color}
+            />
+          ),
 
-            // This is the "toggle theme" button in the header
-            headerRight: () => <HeaderRightButtons />,
-          }}
-        />
-        <Tabs.Screen
-          name="search"
-          options={{ 
-            title: "Search",
-            headerStyle: {
-              backgroundColor: colorScheme.surface,
-            },
-            // headerTintColor: colorScheme.text,
-            headerTitleStyle: {
-              backgroundColor: colorScheme.surface,
-              color: colorScheme.text,
-            },
-            tabBarIcon: ({ color, size, focused }) => (
-              <Ionicons
-                name={focused ? "search" : "search-outline"}
-                size={size}
-                color={color}
-              />
-            ),
-          }}
-        />  
-        <Tabs.Screen
-          name="profile"
-          options={{ 
-            title: "Profile", 
-            headerShown: false,
-            
-            // This is the icon for the profile tab
-            tabBarIcon: ({ color, size, focused }) => (
-              <Ionicons
-                name={focused ? "person" : "person-outline"}
-                size={size}
-                color={color}
-              />
-            ),
-          }}
-        />
-      </Tabs>
+          // This is the "toggle theme" button in the header
+          headerRight: () => <HeaderRightButtons />,
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: "Search",
+          headerStyle: {
+            backgroundColor: colorScheme.surface,
+          },
+          // headerTintColor: colorScheme.text,
+          headerTitleStyle: {
+            backgroundColor: colorScheme.surface,
+            color: colorScheme.text,
+          },
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "search" : "search-outline"}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name='add_post'
+        options={{
+          title: "Add Post",
+          headerStyle: {
+            backgroundColor: colorScheme.surface,
+          },
+          headerTitleStyle: {
+            backgroundColor: colorScheme.surface,
+            color: colorScheme.text
+          },
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "add-circle" : "add-circle-outline"}
+              size={size}
+              color={color}
+            />
+          )
+        }}>
+
+      </Tabs.Screen>
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          headerShown: false,
+
+          // This is the icon for the profile tab
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }
