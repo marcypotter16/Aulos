@@ -1,11 +1,14 @@
+import ProfileScreenPostCard, { ProfileScreenPost } from "@/components/PostCard/ProfileScreenPostCard";
 import { useAuth } from "@/hooks/AuthContext";
 import { useRedirectIfUnauthenticated } from "@/hooks/useRedirectIfNotAuthenticated";
 import { supabase } from "@/supabase";
+import { showError } from "@/utils/ErrorUtils";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { Link, router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  FlatList,
   Image,
   Modal,
   ScrollView,
@@ -15,6 +18,7 @@ import {
   View,
 } from "react-native";
 import Toast from "react-native-toast-message";
+
 
 async function uploadProfilePic(file: Blob, userId: string): Promise<string> {
   const filePath = `user_${userId}.jpg`;
@@ -33,11 +37,7 @@ async function uploadProfilePic(file: Blob, userId: string): Promise<string> {
     });
 
   if (uploadError) {
-    Toast.show({
-      type: "error",
-      text1: "Error uploading profile picture:",
-      text2: uploadError.message,
-    });
+    showError(uploadError, "Error in uploading profile pic")
     throw uploadError;
   }
 
@@ -50,6 +50,64 @@ export default function ProfileScreen() {
   const { isLoading } = useRedirectIfUnauthenticated();
   const { user } = useAuth();
   const [showZoomedAvatar, setShowZoomedAvatar] = useState(false);
+  const [posts, setPosts] = useState<ProfileScreenPost[] | null>(null)
+
+  useEffect(() => {
+  const fetchPosts = async () => {
+    const { data: postData, error } = await supabase
+      .from("posts")
+      .select(`
+        id,
+        content,
+        created_at,
+        post_media (
+          id,
+          url,
+          type
+        )
+      `)
+      .eq("user_id", user!.id);
+
+    if (error) {
+      console.error("Error fetching posts:", error);
+      return;
+    }
+
+    // Generate signed URLs for each media file
+    const updatedPosts = await Promise.all(
+      postData.map(async (post) => {
+        const updatedMedia = await Promise.all(
+          post.post_media.map(async (media) => {
+            console.log("media url", media.url)
+            const { data: signed, error: urlError } = await supabase
+              .storage
+              .from("post-media-bucket")
+              .createSignedUrl(media.url, 60); // expires in 60s
+
+            if (urlError) {
+              showError(urlError, "Error in creating signed url")
+              console.error(urlError)
+            }
+            return {
+              ...media,
+              url: signed?.signedUrl ?? "", // fallback to empty if failed
+            };
+          })
+        );
+
+        return {
+          ...post,
+          post_media: updatedMedia,
+        };
+      })
+    );
+
+    setPosts(updatedPosts);
+  };
+
+  fetchPosts();
+}, []);
+
 
   if (isLoading || !user) return <Text>Loading...</Text>;
 
@@ -141,14 +199,14 @@ export default function ProfileScreen() {
       </View>
 
       {/* Media Posts */}
-      <Text style={styles.sectionTitle}>Performances</Text>
-      {/* <FlatList
-        data={mockPosts}
-        renderItem={({ item }) => <PostCard post={item} />}
+      <Text style={styles.sectionTitle}>Posts</Text>
+      <FlatList
+        data={posts}
+        renderItem={({ item }) => <ProfileScreenPostCard post={item} />}
         keyExtractor={(item) => item.id}
         numColumns={3}
         scrollEnabled={false}
-      /> */}
+      />
 
       {/* Reviews Preview */}
       <View style={styles.reviewSection}>

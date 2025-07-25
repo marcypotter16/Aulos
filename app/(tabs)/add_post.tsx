@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { v4 } from 'uuid';
 
@@ -106,7 +106,7 @@ export default function AddPostScreen() {
                         : media.type.startsWith("audio")
                             ? "audio"
                             : "image";
-                    
+
                     // Insert also the "reference" of this media in the post_media table
                     const result2 = await supabase
                         .from("post_media")
@@ -139,6 +139,30 @@ export default function AddPostScreen() {
         }
     };
 
+    const PublishButton = () => {
+        return (
+            <View  style={{
+                flexDirection: 'column',
+                justifyContent: 'space-around',
+                backgroundColor: theme === 'dark' ? darkThemeColors.primary : lightThemeColors.primary,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: 'white'
+            }}>
+                <TouchableOpacity onPress={handlePost}>
+                    {/* <Ionicons name='arrow-up-circle-outline' size={40}
+                        color={theme === 'dark' ? darkThemeColors.accent : lightThemeColors.accent} /> */}
+                    <Text style={{
+                        color: theme === 'dark' ? darkThemeColors.text : lightThemeColors.text,
+                        fontSize: 18,
+                        margin: 10,
+                    }}>Publish</Text>
+                </TouchableOpacity>
+            </View>
+        )
+    }
+
+
     return (
         <View style={styles(theme).container}>
             <TextInput
@@ -153,14 +177,12 @@ export default function AddPostScreen() {
                     <Ionicons name='image-outline' size={40}
                         color={theme === 'dark' ? 'white' : 'black'} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handlePost}>
-                    <Ionicons name='arrow-up-circle-outline' size={40}
-                        color={theme === 'dark' ? darkThemeColors.accent : lightThemeColors.accent} />
-                </TouchableOpacity>
+                <PublishButton />
             </View>
         </View>
     );
 }
+
 
 const styles = (theme: 'light' | 'dark') => StyleSheet.create({
     container: { flex: 1, padding: 16, minHeight: "100%", backgroundColor: theme === 'light' ? lightThemeColors.background : darkThemeColors.background },
