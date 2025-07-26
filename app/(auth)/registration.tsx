@@ -85,7 +85,7 @@ const Registration = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Create an Account</Text>
 
-      {(['name', 'email', 'user_name', 'instrument', 'genre', 'password'] as const).map((field) => (
+      {([ 'name', 'email', 'user_name', 'instrument', 'genre', 'password' ] as const).map((field) => (
         <Controller
           key={field}
           control={control}
@@ -101,9 +101,9 @@ const Registration = () => {
                 onChangeText={onChange}
                 autoCapitalize="none"
               />
-              {errors[field] && (
+              {errors[ field ] && (
                 <Text style={{ color: 'red', marginBottom: 8 }}>
-                  {errors[field]?.message as string}
+                  {errors[ field ]?.message as string}
                 </Text>
               )}
             </>

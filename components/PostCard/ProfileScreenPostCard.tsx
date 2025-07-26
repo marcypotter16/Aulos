@@ -22,7 +22,7 @@ export type ProfileScreenPost = {
 }
 
 
-const ProfileScreenPostCard = ({ post }: { post: ProfileScreenPost }) => {
+const ProfileScreenPostCard = ({ post, onPostDeleted }: { post: ProfileScreenPost, onPostDeleted: () => void }) => {
     const { user } = useAuth()
     const handleDeletePost = async () => {
         const { error } = await supabase
@@ -32,24 +32,23 @@ const ProfileScreenPostCard = ({ post }: { post: ProfileScreenPost }) => {
 
         if (error) {
             showError(error, "Error in deleting post")
+        } else {
+            onPostDeleted() // This is made to trigger something in the parent component!
         }
     }
-    const { theme } = useTheme();
-    const [showLikeTooltip, setLikeTooltip] = React.useState(false);
+    const { theme, colorScheme } = useTheme();
+    const [ showLikeTooltip, setLikeTooltip ] = React.useState(false);
     return (
         <View style={getStyles(theme).card}>
-            <View style={getStyles(theme).header}>
-                <Image source={{ uri: user!.avatar_url }} style={getStyles(theme).avatar} />
-                <Text style={getStyles(theme).name}>{user!.name}</Text>
-            </View>
-            <Text style={getStyles(theme).text}>{post.content}</Text>
             {post.post_media && post.post_media.length > 0
-                ? <Image source={{ uri: post.post_media[0].url }} style={getStyles(theme).postImage} />
+                ? <Image source={{ uri: post.post_media[ 0 ].url }} style={getStyles(theme).postImage} />
                 : null}
+            <Text style={getStyles(theme).text}>{post.content}</Text>
             <View style={getStyles(theme).actions}>
                 <PostActionIcon name="trash-outline"
                     onPress={handleDeletePost}
-                    color={getStyles(theme).text.color} />
+                    color={colorScheme.accent}
+                />
             </View>
         </View>
     );
@@ -60,13 +59,14 @@ const getStyles = (theme: 'light' | 'dark') =>
         card: {
             backgroundColor: theme === 'dark' ? darkThemeColors.surface : lightThemeColors.surface,
             marginVertical: 8,
-            padding: 12,
+            padding: 5,
             borderRadius: 12,
             shadowColor: '#000',
             shadowOpacity: 0.1,
             shadowRadius: 4,
             elevation: 3,
             marginHorizontal: 16,
+            width: '10%'
         },
         header: {
             flexDirection: 'row',
@@ -87,14 +87,17 @@ const getStyles = (theme: 'light' | 'dark') =>
         text: {
             fontSize: 15,
             marginVertical: 8,
+            marginLeft: 10,
             color: theme === 'dark' ? darkThemeColors.text : lightThemeColors.text,
         },
         postImage: {
             width: '100%',
-            height: 180,
+            aspectRatio: 1, // 👈 Makes image square and keeps proportions
             borderRadius: 10,
             marginTop: 8,
+            resizeMode: 'cover', // 👈 Ensures proper cropping instead of stretching
         },
+
         actions: {
             flexDirection: 'row',
             marginTop: 10,

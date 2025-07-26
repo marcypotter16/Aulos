@@ -2,14 +2,16 @@ import { darkThemeColors, lightThemeColors } from '@/constants';
 import { useAuth } from '@/hooks/AuthContext';
 import { useTheme } from '@/hooks/ThemeContext';
 import { useRedirectIfUnauthenticated } from '@/hooks/useRedirectIfNotAuthenticated';
+import { PostMediaInsert } from '@/models/post_media';
 import { supabase } from '@/supabase'; // your initialized client
+import { showError } from '@/utils/ErrorUtils';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { v4 } from 'uuid';
+import uuid from 'react-native-uuid';
 
 type MediaItem = {
     uri: string;
@@ -23,16 +25,16 @@ export default function AddPostScreen() {
     useRedirectIfUnauthenticated("/login")
     const { user } = useAuth()
     const { theme } = useTheme()
-    const [content, setContent] = useState('');
-    const [medias, setMedias] = useState<MediaItem[] | null>(null);
-    const [visibility, setVisibility] = useState<'public' | 'private'>('public');
-    const [loading, setLoading] = useState(false);
+    const [ content, setContent ] = useState('');
+    const [ medias, setMedias ] = useState<MediaItem[] | null>(null);
+    const [ visibility, setVisibility ] = useState<'public' | 'private'>('public');
+    const [ loading, setLoading ] = useState(false);
 
-    const POST_ID = v4()
+    const POST_ID = uuid.v4()
 
     const pickMedia = async () => {
         const result = await DocumentPicker.getDocumentAsync({
-            type: ['video/*', 'audio/*', 'image/*'],
+            type: [ 'video/*', 'audio/*', 'image/*' ],
             multiple: true,
         });
 
@@ -64,6 +66,7 @@ export default function AddPostScreen() {
                 id: POST_ID,
                 user_id: user?.id,
                 content: content,
+                created_at: new Date().toISOString().toString(),
                 visibility: visibility,
             });
 
@@ -78,7 +81,7 @@ export default function AddPostScreen() {
             // Then insert the media in the bucket
             if (medias && medias.length > 0) {
                 for (let index = 0; index < medias.length; index++) {
-                    const media = medias[index];
+                    const media = medias[ index ];
 
                     const uploadPath = `${POST_ID}/${media.name}`;
                     const result = await supabase.storage
@@ -97,9 +100,9 @@ export default function AddPostScreen() {
                         return;
                     }
 
-                    const publicUrl = supabase.storage
-                        .from("post-media-bucket")
-                        .getPublicUrl(uploadPath).data.publicUrl;
+                    // const publicUrl = supabase.storage
+                    //     .from("post-media-bucket")
+                    //     .getPublicUrl(uploadPath).data.publicUrl;
 
                     const baseType = media.type.startsWith("video")
                         ? "video"
@@ -108,32 +111,27 @@ export default function AddPostScreen() {
                             : "image";
 
                     // Insert also the "reference" of this media in the post_media table
+                    const postMedia: PostMediaInsert = {
+                        post_id: POST_ID,
+                        type: baseType,
+                        position: index,
+                        created_at: new Date().toISOString().toString(),
+                        media_path: uploadPath
+                    }
                     const result2 = await supabase
                         .from("post_media")
-                        .insert({
-                            post_id: POST_ID,
-                            url: publicUrl,
-                            type: baseType,
-                            position: index,
-                        });
+                        .insert(postMedia);
 
                     if (result2.error) {
-                        Toast.show({
-                            type: "error",
-                            text1: "Error inserting into post_media table",
-                            text2: result2.error.message,
-                        });
+                        showError(result2.error, "Error inserting in the post_media table")
                         console.error(result2.error.message)
                         return;
                     }
                 }
             }
         } catch (err) {
-            Toast.show({
-                type: "error",
-                text1: "Unexpected error during upload",
-                text2: err instanceof Error ? err.message : String(err),
-            });
+            showError(err as Error, "Unknown error during upload")
+            console.error(err)
         } finally {
             setLoading(false);
         }
@@ -141,7 +139,7 @@ export default function AddPostScreen() {
 
     const PublishButton = () => {
         return (
-            <View  style={{
+            <View style={{
                 flexDirection: 'column',
                 justifyContent: 'space-around',
                 backgroundColor: theme === 'dark' ? darkThemeColors.primary : lightThemeColors.primary,

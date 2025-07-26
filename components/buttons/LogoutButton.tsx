@@ -1,3 +1,4 @@
+import { useTheme } from "@/hooks/ThemeContext";
 import { supabase } from "@/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -6,8 +7,11 @@ import { ActivityIndicator, TouchableOpacity } from "react-native";
 import Toast from "react-native-toast-message";
 
 export default function LogoutButton() {
+  const { theme, colorScheme } = useTheme()
+  console.log(theme, colorScheme);
+
   const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [ isLoggingOut, setIsLoggingOut ] = useState(false);
 
 
   const handleLogout = async () => {
@@ -43,7 +47,7 @@ export default function LogoutButton() {
       {isLoggingOut ? (
         <ActivityIndicator size="small" />
       ) : (
-        <Ionicons name="log-out-outline" size={24} />
+        <Ionicons name="log-out-outline" size={30} color={colorScheme.text} />
       )}
     </TouchableOpacity>
   );

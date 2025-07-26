@@ -1,3 +1,4 @@
+import { ColorScheme, darkThemeColors, lightThemeColors } from '@/constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Appearance } from 'react-native';
@@ -6,18 +7,21 @@ type Theme = 'light' | 'dark';
 
 interface ThemeContextType {
   theme: Theme;
+  colorScheme: ColorScheme
   toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'light',
-  toggleTheme: () => {},
+  colorScheme: lightThemeColors,
+  toggleTheme: () => { },
 });
 
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('light');
+  const [ theme, setTheme ] = useState<Theme>('light');
+  const [ colorScheme, setColorScheme ] = useState<ColorScheme>(lightThemeColors)
   // useEffect(() => {
   //   if (typeof document !== 'undefined') {
   //     // This is for web, where we can set the class on the body
@@ -25,7 +29,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   //     document.body.style.backgroundColor = background;
   //     document.documentElement.style.backgroundColor = background;
   //   }
-    
+
   // }, [theme]);
 
   // Load stored or system theme on startup
@@ -39,13 +43,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const systemTheme = Appearance.getColorScheme() as Theme;
         setTheme(systemTheme || 'light');
       }
+      setColorScheme(theme === 'light' ? lightThemeColors : darkThemeColors)
     };
     initTheme();
   }, []);
 
   const toggleTheme = async () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
+    const newColorScheme = newTheme === 'light' ? lightThemeColors : darkThemeColors
     setTheme(newTheme);
+    setColorScheme(newColorScheme)
     // TODO: remove this print statement in production
     console.log(`Theme changed to: ${newTheme}`);
     // Store the new theme in AsyncStorage
@@ -53,7 +60,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, colorScheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
