@@ -2,8 +2,8 @@ import PostCard from '@/components/PostCard/PostCard';
 import { darkThemeColors, lightThemeColors } from '@/constants';
 import { useTheme } from '@/hooks/ThemeContext';
 import Post from '@/models/post';
-import React from 'react';
-import { FlatList, StyleSheet } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { FlatList, StyleSheet, ViewToken } from 'react-native';
 
 const posts: Post[] = [
   {
@@ -26,7 +26,17 @@ const posts: Post[] = [
       },
       {
         id: 'm2',
-        url: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
+        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        type: 'video',
+      },
+      {
+        id: 'm3',
+        url: 'https://images.unsplash.com/photo-1511376777868-611b54f68947',
+        type: 'image',
+      },
+      {
+        id: 'm4',
+        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
         type: 'video',
       },
     ],
@@ -57,10 +67,17 @@ const posts: Post[] = [
 
 const FeedScreen = () => {
   const { theme } = useTheme();
+  const [ visiblePostIds, setVisiblePostIds ] = useState<string[]>([]);
 
-  // Function to render each post item
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const ids = viewableItems.map((item) => item.item.id);
+      setVisiblePostIds(ids);
+    }
+  );
+
   const renderItem = ({ item }: { item: Post }) => (
-    <PostCard post={item} /> // Use PostCard component to render each post (see components/post_card.tsx)
+    <PostCard post={item} isVisible={visiblePostIds.includes(item.id)} />
   );
 
   return (
@@ -68,7 +85,10 @@ const FeedScreen = () => {
       data={posts}
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
+      onViewableItemsChanged={onViewableItemsChanged.current}
+      viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
       contentContainerStyle={getStyles(theme).container}
+      removeClippedSubviews
     />
   );
 };
@@ -78,9 +98,8 @@ const getStyles = (theme: 'dark' | 'light') =>
     container: {
       paddingVertical: 10,
       backgroundColor: theme === 'dark' ? darkThemeColors.background : lightThemeColors.background,
-      minHeight: '100%', // Ensure the container takes full height
+      minHeight: '100%',
     },
-    
   });
 
 export default FeedScreen;
