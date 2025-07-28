@@ -77,36 +77,7 @@ export default function ProfileScreen() {
 				return;
 			}
 
-			// Generate signed URLs for each media file
-			const updatedPosts = await Promise.all(
-				postData.map(async (post) => {
-					const updatedMedia = await Promise.all(
-						post.post_media.map(async (media) => {
-							console.log("media url", media.media_path)
-							const { data: signed, error: urlError } = await supabase
-								.storage
-								.from("post-media-bucket")
-								.createSignedUrl(media.media_path, 60); // expires in 60s
-
-							if (urlError) {
-								showError(urlError, "Error in creating signed url")
-								console.error(urlError)
-							}
-							return {
-								...media,
-								url: signed?.signedUrl ?? "", // fallback to empty if failed
-							};
-						})
-					);
-
-					return {
-						...post,
-						post_media: updatedMedia,
-					};
-				})
-			);
-
-			setPosts(updatedPosts);
+			setPosts(postData as ProfileScreenPost[]);
 		};
 
 		fetchPosts();
@@ -154,7 +125,6 @@ export default function ProfileScreen() {
 	};
 
 	return (
-		// This is all provvisionary data, replace with real user and posts data
 		<ScrollView style={styles(theme).container}>
 			{/* Profile Header */}
 			<View style={styles(theme).header}>
@@ -212,10 +182,8 @@ export default function ProfileScreen() {
 				keyExtractor={(item) => item.id}
 				numColumns={3}
 				scrollEnabled={true}
-				style={{
-					paddingHorizontal: 20
-
-				}}
+				contentContainerStyle={styles(theme).postsContainer}
+				columnWrapperStyle={styles(theme).row}
 			/>
 
 			{/* Reviews Preview */}
@@ -333,5 +301,13 @@ const styles = (theme: 'light' | 'dark') => StyleSheet.create({
 	zoomedImage: {
 		width: "90%",
 		height: "70%",
+	},
+	postsContainer: {
+		paddingHorizontal: 16,
+		paddingBottom: 20,
+	},
+	row: {
+		justifyContent: 'space-between',
+		paddingHorizontal: 4,
 	},
 });

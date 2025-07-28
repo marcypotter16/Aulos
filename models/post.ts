@@ -1,9 +1,4 @@
-export interface PostMedia {
-    id: string;
-    url: string;
-    type: 'image' | 'video' | 'audio';
-    position?: number;
-}
+import { PostMedia } from "./post_media";
 
 export default interface Post {
     id: string;

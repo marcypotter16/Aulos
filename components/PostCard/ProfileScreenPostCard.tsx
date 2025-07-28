@@ -3,27 +3,29 @@
 import { darkThemeColors, lightThemeColors } from '@/constants';
 import { useAuth } from '@/hooks/AuthContext';
 import { useTheme } from '@/hooks/ThemeContext';
+import { PostMedia } from '@/models/post_media';
 import { supabase } from '@/supabase';
 import { showError } from '@/utils/ErrorUtils';
-import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
+import MediaListRenderer from './MediaListRenderer';
 import PostActionIcon from './PostActionIcon';
 
 export type ProfileScreenPost = {
     id: string,
     content: string,
     created_at: string,
-    post_media: {
-        id: string,
-        url: string,
-        type: string
-    }[]
-
+    post_media: PostMedia[]
 }
 
 
+const { width: screenWidth } = Dimensions.get('window');
+
 const ProfileScreenPostCard = ({ post, onPostDeleted }: { post: ProfileScreenPost, onPostDeleted: () => void }) => {
     const { user } = useAuth()
+    const { theme, colorScheme } = useTheme();
+    const styles = useMemo(() => getStyles(theme), [theme]);
+
     const handleDeletePost = async () => {
         const { error } = await supabase
             .from("posts")
@@ -36,15 +38,22 @@ const ProfileScreenPostCard = ({ post, onPostDeleted }: { post: ProfileScreenPos
             onPostDeleted() // This is made to trigger something in the parent component!
         }
     }
-    const { theme, colorScheme } = useTheme();
-    const [ showLikeTooltip, setLikeTooltip ] = React.useState(false);
+    const getItemLayout = useCallback((data: any, index: number) => {
+        // Calculate actual item width based on card width
+        const cardWidth = screenWidth / 3 - 32; // Approximate card width in 3-column layout
+        const itemWidth = cardWidth + 8; // Card width + margin
+        return {
+            length: itemWidth,
+            offset: itemWidth * index,
+            index,
+        };
+    }, []);
+
     return (
-        <View style={getStyles(theme).card}>
-            {post.post_media && post.post_media.length > 0
-                ? <Image source={{ uri: post.post_media[ 0 ].url }} style={getStyles(theme).postImage} />
-                : null}
-            <Text style={getStyles(theme).text}>{post.content}</Text>
-            <View style={getStyles(theme).actions}>
+        <View style={styles.card}>
+            {post.post_media && post.post_media.length > 0 && <MediaListRenderer post_medias={post.post_media} isVisible={true} />}
+            <Text style={styles.text}>{post.content}</Text>
+            <View style={styles.actions}>
                 <PostActionIcon name="trash-outline"
                     onPress={handleDeletePost}
                     color={colorScheme.accent}
@@ -58,15 +67,19 @@ const getStyles = (theme: 'light' | 'dark') =>
     StyleSheet.create({
         card: {
             backgroundColor: theme === 'dark' ? darkThemeColors.surface : lightThemeColors.surface,
-            marginVertical: 8,
-            padding: 5,
-            borderRadius: 12,
+            marginVertical: 6,
+            marginHorizontal: 4,
+            padding: 8,
+            borderRadius: 16,
             shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 3,
-            marginHorizontal: 16,
-            width: '10%'
+            shadowOpacity: theme === 'dark' ? 0.3 : 0.15,
+            shadowRadius: 6,
+            shadowOffset: { width: 0, height: 2 },
+            elevation: 4,
+            flex: 1,
+            maxWidth: '31%',
+            borderWidth: theme === 'dark' ? 1 : 0,
+            borderColor: theme === 'dark' ? darkThemeColors.text : 'transparent',
         },
         header: {
             flexDirection: 'row',
@@ -85,23 +98,112 @@ const getStyles = (theme: 'light' | 'dark') =>
             color: theme === 'dark' ? darkThemeColors.text : lightThemeColors.text,
         },
         text: {
-            fontSize: 15,
-            marginVertical: 8,
-            marginLeft: 10,
+            fontSize: 12,
+            marginVertical: 6,
+            marginHorizontal: 4,
             color: theme === 'dark' ? darkThemeColors.text : lightThemeColors.text,
+            lineHeight: 16,
+            textAlign: 'center',
         },
         postImage: {
             width: '100%',
-            aspectRatio: 1, // 👈 Makes image square and keeps proportions
-            borderRadius: 10,
-            marginTop: 8,
-            resizeMode: 'cover', // 👈 Ensures proper cropping instead of stretching
+            aspectRatio: 1,
+            borderRadius: 12,
+            marginBottom: 6,
+            resizeMode: 'cover',
+            backgroundColor: theme === 'dark' ? darkThemeColors.background : lightThemeColors.background,
+        },
+        mediaWrapper: {
+            marginRight: 4,
+            width: '100%',
+            alignItems: 'center',
+        },
+        singleMediaContainer: {
+            width: '100%',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+        },
+        mediaSlideContainer: {
+            width: '100%',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transform: [{ translateX: 0 }],
+            ...(Platform.OS === 'web' && {
+                transition: 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            }),
+        },
+        mediaSlideTransition: {
+            ...(Platform.OS === 'web' && {
+                transform: [{ translateX: 10 }],
+                opacity: 0.8,
+            }),
+        },
+        singleMediaWrapper: {
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
+        mediaIndicators: {
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 6,
+            marginBottom: 4,
+            gap: 4,
+        },
+        indicator: {
+            width: 6,
+            height: 6,
+            borderRadius: 3,
+            backgroundColor: theme === 'dark' ? darkThemeColors.secondary : lightThemeColors.secondary,
+            opacity: 0.5,
+        },
+        activeIndicator: {
+            backgroundColor: theme === 'dark' ? darkThemeColors.primary : lightThemeColors.primary,
+            opacity: 1,
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+        },
+        webNavigation: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: 4,
+            paddingHorizontal: 8,
+        },
+        navButton: {
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            backgroundColor: theme === 'dark' ? darkThemeColors.primary : lightThemeColors.primary,
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: '#000',
+            shadowOpacity: 0.2,
+            shadowRadius: 2,
+            elevation: 2,
+        },
+        navButtonDisabled: {
+            backgroundColor: theme === 'dark' ? darkThemeColors.secondary : lightThemeColors.secondary,
+            opacity: 0.5,
+        },
+        mediaCounter: {
+            fontSize: 10,
+            fontWeight: '500',
+            color: theme === 'dark' ? darkThemeColors.text : lightThemeColors.text,
+            backgroundColor: theme === 'dark' ? darkThemeColors.surface : lightThemeColors.surface,
+            paddingHorizontal: 6,
+            paddingVertical: 2,
+            borderRadius: 8,
+            overflow: 'hidden',
         },
 
         actions: {
             flexDirection: 'row',
-            marginTop: 10,
-            justifyContent: 'space-around',
+            marginTop: 4,
+            justifyContent: 'center',
+            paddingVertical: 4,
         },
         action: {
             fontSize: 14,

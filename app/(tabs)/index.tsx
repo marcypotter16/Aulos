@@ -27,25 +27,37 @@ const generateMockPost = (id: number): Post => ({
   userName: ['Alex Rivera', 'JazzQueen', 'RockStar99', 'MelodyMaker', 'BeatDrop'][((id - 1) % 5)],
   userProfilePicture: `https://i.pravatar.cc/100?img=${((id - 1) % 10) + 1}`,
   post_media: id % 3 === 0 ? [
-    // Every 3rd post has audio
+    // Every 3rd post has audio - use pre-signed URLs for external media
     {
       id: `m${id}_audio`,
-      url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+      post_id: `${id}`,
+      media_path: 'external', // Indicates external URL
+      signed_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
       type: 'audio',
+      position: 0,
+      created_at: `2024-01-${String(id).padStart(2, '0')}`,
     },
   ] : [
-    // Other posts have mixed media
+    // Other posts have mixed media - use pre-signed URLs for external media
     {
       id: `m${id}_1`,
-      url: id % 2 === 0 
+      post_id: `${id}`,
+      media_path: 'external', // Indicates external URL
+      signed_url: id % 2 === 0 
         ? 'https://images.unsplash.com/photo-1511376777868-611b54f68947'
         : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
       type: id % 2 === 0 ? 'image' : 'video',
+      position: 0,
+      created_at: `2024-01-${String(id).padStart(2, '0')}`,
     },
     ...(Math.random() > 0.6 ? [{
       id: `m${id}_2`,
-      url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f',
+      post_id: `${id}`,
+      media_path: 'external', // Indicates external URL
+      signed_url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f',
       type: 'image' as const,
+      position: 1,
+      created_at: `2024-01-${String(id).padStart(2, '0')}`,
     }] : []),
   ],
   showActions: true,

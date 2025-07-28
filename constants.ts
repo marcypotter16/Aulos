@@ -30,3 +30,4 @@ export const lightThemeColors: ColorScheme = {
 
 export const API_URL = process.env.API_URL || 'http://127.0.0.1:8000'
 export const N_FEED_PAGINATION_ELEMENTS: number = 10
+export const DEFAULT_SIGNED_URL_EXPIRATION: number = 60 // in seconds

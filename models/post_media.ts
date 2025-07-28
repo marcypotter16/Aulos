@@ -5,6 +5,7 @@ export interface PostMedia {
     position:   number // The index of the media in the array of medias of a post
     created_at: string
     media_path: string // The media path inside supabase.storage, NOT the public URL!
+    signed_url?: string | undefined
 }
 
 export interface PostMediaInsert {
