@@ -9,7 +9,7 @@ import {
   Text,
   View
 } from 'react-native';
-import MediaListRenderer from './MediaListRenderer';
+import MediaListRenderer from '@/utils/media_rendering/MediaListRenderer';
 import PostActionIcon from './PostActionIcon';
 
 type Props = {

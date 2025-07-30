@@ -8,7 +8,7 @@ import { supabase } from '@/supabase';
 import { showError } from '@/utils/ErrorUtils';
 import React, { useCallback, useMemo } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, View } from 'react-native';
-import MediaListRenderer from './MediaListRenderer';
+import MediaListRenderer from '@/utils/media_rendering/MediaListRenderer';
 import PostActionIcon from './PostActionIcon';
 
 export type ProfileScreenPost = {

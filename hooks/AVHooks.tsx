@@ -1,4 +1,5 @@
-import { PostMedia } from '@/models/post';
+// AVHooks.tsx
+import { PostMedia } from '@/models/post_media';
 import { AudioPlayer, useAudioPlayer as expoUseAudioPlayer } from 'expo-audio';
 import { VideoPlayer, useVideoPlayer as expoUseVideoPlayer } from 'expo-video';
 import { useEffect, useState } from 'react';
@@ -9,7 +10,7 @@ export const useVideoPlayerForMedia = (media: PostMedia | null): VideoPlayer | n
   const [ isReady, setIsReady ] = useState(false);
 
   const videoPlayer = expoUseVideoPlayer(
-    media?.type === 'video' ? media.url : null
+    media?.type === 'video' ? media.signed_url! : null
   );
 
   // Configure the player after creation with better error handling
@@ -39,10 +40,10 @@ export const useAudioPlayerForMedia = (media: PostMedia | null): AudioPlayer | n
 
   // On web, only create audio players for the currently active item to prevent DOMException
   const shouldCreateAudioPlayer = media?.type === 'audio' &&
-    (Platform.OS !== 'web' || media.url !== null);
+    (Platform.OS !== 'web' || media.signed_url !== null);
 
   const audioPlayer = expoUseAudioPlayer(
-    shouldCreateAudioPlayer ? media.url : null
+    shouldCreateAudioPlayer ? media.signed_url : null
   );
 
   // Configure the player after creation
