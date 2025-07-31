@@ -10,9 +10,11 @@ import * as ImagePicker from "expo-image-picker";
 import { Link, router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+	Dimensions,
 	FlatList,
 	Image,
 	Modal,
+	Platform,
 	ScrollView,
 	StyleSheet,
 	Text,
@@ -21,6 +23,8 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 
+const { width: screenWidth } = Dimensions.get('window');
+const isTablet = screenWidth >= 768;
 
 async function uploadProfilePic(file: Blob, userId: string): Promise<string> {
 	const filePath = `user_${userId}.jpg`;
@@ -180,7 +184,7 @@ export default function ProfileScreen() {
 					/* onPostDeleted triggers a change in the trigger, which triggers useEffect and refreshes the posts */
 					onPostDeleted={() => setRefreshPostsTrigger((prev) => prev + 1)} />}
 				keyExtractor={(item) => item.id}
-				numColumns={3}
+				numColumns={Platform.OS === 'web' ? 3 : isTablet ? 3 : 1}
 				scrollEnabled={true}
 				contentContainerStyle={styles(theme).postsContainer}
 				columnWrapperStyle={styles(theme).row}

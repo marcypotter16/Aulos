@@ -20,6 +20,8 @@ export type ProfileScreenPost = {
 
 
 const { width: screenWidth } = Dimensions.get('window');
+const isTablet = screenWidth >= 768;
+const isPhone = screenWidth < 768;
 
 const ProfileScreenPostCard = ({ post, onPostDeleted }: { post: ProfileScreenPost, onPostDeleted: () => void }) => {
     const { user } = useAuth()
@@ -67,9 +69,9 @@ const getStyles = (theme: 'light' | 'dark') =>
     StyleSheet.create({
         card: {
             backgroundColor: theme === 'dark' ? darkThemeColors.surface : lightThemeColors.surface,
-            marginVertical: 6,
-            marginHorizontal: 4,
-            padding: 8,
+            marginVertical: isPhone ? 8 : 6,
+            marginHorizontal: isPhone ? 8 : 4,
+            padding: isPhone ? 12 : 8,
             borderRadius: 16,
             shadowColor: '#000',
             shadowOpacity: theme === 'dark' ? 0.3 : 0.15,
@@ -77,7 +79,12 @@ const getStyles = (theme: 'light' | 'dark') =>
             shadowOffset: { width: 0, height: 2 },
             elevation: 4,
             flex: 1,
-            maxWidth: '31%',
+            // Responsive width based on platform and screen size
+            maxWidth: Platform.OS === 'web' 
+                ? '31%' 
+                : isPhone 
+                    ? '100%'  // 1 column on phone
+                    : '31%', // 3 columns on tablet
             borderWidth: theme === 'dark' ? 1 : 0,
             borderColor: theme === 'dark' ? darkThemeColors.text : 'transparent',
         },
