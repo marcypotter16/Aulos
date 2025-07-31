@@ -83,8 +83,7 @@ export default function ProfileScreen() {
 
 			setPosts(postData as ProfileScreenPost[]);
 		};
-
-		fetchPosts();
+		if (user !== null) fetchPosts();
 	}, [ refreshPostsTrigger ]);
 
 

@@ -53,8 +53,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newColorScheme = newTheme === 'light' ? lightThemeColors : darkThemeColors
     setTheme(newTheme);
     setColorScheme(newColorScheme)
-    // TODO: remove this print statement in production
-    console.log(`Theme changed to: ${newTheme}`);
     // Store the new theme in AsyncStorage
     await AsyncStorage.setItem('app-theme', newTheme);
   };

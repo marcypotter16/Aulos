@@ -8,7 +8,6 @@ import Toast from "react-native-toast-message";
 
 export default function LogoutButton() {
   const { theme, colorScheme } = useTheme()
-  console.log(theme, colorScheme);
 
   const router = useRouter();
   const [ isLoggingOut, setIsLoggingOut ] = useState(false);

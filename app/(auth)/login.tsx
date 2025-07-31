@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/AuthContext";
 import { useTheme } from "@/hooks/ThemeContext";
 import { supabase } from "@/supabase";
 import { Link, router } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -22,6 +22,9 @@ const LoginPage = () => {
   const [localError, setLocalError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { isLoading: authLoading } = useAuth();
+  
+  // Refs for navigation
+  const passwordRef = useRef<TextInput>(null);
 
   // Authentication context
   const handleLogin = async () => {
@@ -80,14 +83,20 @@ const LoginPage = () => {
         autoCapitalize="none"
         value={username}
         onChangeText={setUsername}
+        returnKeyType="next"
+        onSubmitEditing={() => passwordRef.current?.focus()}
+        blurOnSubmit={false}
       />
 
       <TextInput
+        ref={passwordRef}
         style={getStyles(theme).input}
         placeholder="Password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        returnKeyType="done"
+        onSubmitEditing={handleLogin}
       />
 
       {localError && (

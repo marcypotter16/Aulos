@@ -3,7 +3,7 @@ import { useTheme } from '@/hooks/ThemeContext';
 import { supabase } from '@/supabase';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Link, router } from 'expo-router';
-import React from 'react';
+import React, { useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -73,6 +73,10 @@ const Registration = () => {
     },
   });
 
+  // Refs for navigation
+  const fieldRefs = useRef<{ [key: string]: TextInput | null }>({});
+  const fields = ['name', 'email', 'user_name', 'instrument', 'genre', 'password'] as const;
+
   const onSubmit = async (data: any) => {
     try {
       await register(data);
@@ -81,11 +85,19 @@ const Registration = () => {
     }
   };
 
+  const focusNextField = (currentField: string) => {
+    const currentIndex = fields.indexOf(currentField as any);
+    const nextField = fields[currentIndex + 1];
+    if (nextField && fieldRefs.current[nextField]) {
+      fieldRefs.current[nextField]?.focus();
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create an Account</Text>
 
-      {([ 'name', 'email', 'user_name', 'instrument', 'genre', 'password' ] as const).map((field) => (
+      {fields.map((field, index) => (
         <Controller
           key={field}
           control={control}
@@ -93,6 +105,7 @@ const Registration = () => {
           render={({ field: { onChange, value } }) => (
             <>
               <TextInput
+                ref={(ref) => (fieldRefs.current[field] = ref)}
                 style={styles.input}
                 placeholder={field === 'user_name' ? 'Username' : field.charAt(0).toUpperCase() + field.slice(1)}
                 placeholderTextColor={styles.placeholder.color}
@@ -100,10 +113,13 @@ const Registration = () => {
                 value={value}
                 onChangeText={onChange}
                 autoCapitalize="none"
+                returnKeyType={index === fields.length - 1 ? 'done' : 'next'}
+                onSubmitEditing={index === fields.length - 1 ? handleSubmit(onSubmit) : () => focusNextField(field)}
+                blurOnSubmit={index === fields.length - 1}
               />
-              {errors[ field ] && (
+              {errors[field] && (
                 <Text style={{ color: 'red', marginBottom: 8 }}>
-                  {errors[ field ]?.message as string}
+                  {errors[field]?.message as string}
                 </Text>
               )}
             </>
