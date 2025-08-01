@@ -6,6 +6,7 @@ export interface ColorScheme {
     surface: string
     text: string
     text_dim: string
+    border: string
 }
 
 export const darkThemeColors: ColorScheme = {
@@ -15,7 +16,8 @@ export const darkThemeColors: ColorScheme = {
     background: '#111827',
     surface: '#1F2937',
     text: '#F9FAFB',
-    text_dim: '#666666'
+    text_dim: '#666666',
+    border: '#374151'
 }
 
 export const lightThemeColors: ColorScheme = {
@@ -26,6 +28,7 @@ export const lightThemeColors: ColorScheme = {
     surface: '#FFFFFF',
     text: '#111827',
     text_dim: '#123456',
+    border: '#E5E7EB'
 }
 
 export const API_URL = process.env.API_URL || 'http://127.0.0.1:8000'

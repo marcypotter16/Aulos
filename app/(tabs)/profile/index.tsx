@@ -186,7 +186,7 @@ export default function ProfileScreen() {
 				numColumns={Platform.OS === 'web' ? 3 : isTablet ? 3 : 1}
 				scrollEnabled={true}
 				contentContainerStyle={styles(theme).postsContainer}
-				columnWrapperStyle={styles(theme).row}
+				{...(Platform.OS === 'web' || isTablet ? { columnWrapperStyle: styles(theme).row } : {})}
 			/>
 
 			{/* Reviews Preview */}

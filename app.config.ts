@@ -1,8 +1,9 @@
-// app.config.js
+// app.config.ts
 export default {
   expo: {
     name: "Aulos",
     slug: "aulos",
+    owner: "marcypotter16",
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
@@ -46,7 +47,10 @@ export default {
     },
     extra: {
       supabaseUrl: "https://rvdbedybxigsxyqwgnje.supabase.co",
-      supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2ZGJlZHlieGlnc3h5cXdnbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MDA5NzQsImV4cCI6MjA2Nzk3Njk3NH0.H_T44w_lq7GqowxMSFreDsZYnxUUHiFGDzaCoS0WBhI"
+      supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2ZGJlZHlieGlnc3h5cXdnbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MDA5NzQsImV4cCI6MjA2Nzk3Njk3NH0.H_T44w_lq7GqowxMSFreDsZYnxUUHiFGDzaCoS0WBhI",
+      eas: {
+        projectId: "54aac4c2-fa76-41ef-9e3a-d05d99ac14ae"
+      }
     }
   }
 };

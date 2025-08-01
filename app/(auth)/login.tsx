@@ -59,7 +59,7 @@ const LoginPage = () => {
         throw loginError;
       }
 
-      router.replace("/");
+      router.replace("/home");
     } catch (err: any) {
       setLocalError(err.message || "Login failed");
       Toast.show({
@@ -108,6 +108,14 @@ const LoginPage = () => {
           {isLoggingIn || authLoading ? "Logging in..." : "Log In"}
         </Text>
       </TouchableOpacity>
+      <Link href={"/forgot-password"} asChild>
+        <TouchableOpacity style={getStyles(theme).forgotPasswordButton}>
+          <Text style={getStyles(theme).forgotPasswordText}>
+            Forgot Password?
+          </Text>
+        </TouchableOpacity>
+      </Link>
+
       <Link href={"/registration"} asChild>
         <Text
           style={{
@@ -165,5 +173,14 @@ const getStyles = (theme: "light" | "dark") =>
       color: theme === "dark" ? darkThemeColors.text : lightThemeColors.text,
       fontSize: 16,
       fontWeight: "500",
+    },
+    forgotPasswordButton: {
+      alignItems: "center",
+      marginTop: 12,
+      paddingVertical: 8,
+    },
+    forgotPasswordText: {
+      color: theme === "dark" ? darkThemeColors.primary : lightThemeColors.primary,
+      fontSize: 16,
     },
   });

@@ -26,7 +26,7 @@ export default function TabsLayout() {
         },
       }}>
       <Tabs.Screen
-        name="index"
+        name="home"
         // You can customize the header with a button to toggle theme
         options={{
           title: "Home",

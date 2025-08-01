@@ -105,7 +105,7 @@ const Registration = () => {
           render={({ field: { onChange, value } }) => (
             <>
               <TextInput
-                ref={(ref) => (fieldRefs.current[field] = ref)}
+                ref={(ref) => { fieldRefs.current[field] = ref; }}
                 style={styles.input}
                 placeholder={field === 'user_name' ? 'Username' : field.charAt(0).toUpperCase() + field.slice(1)}
                 placeholderTextColor={styles.placeholder.color}

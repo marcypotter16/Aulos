@@ -9,7 +9,7 @@ type HomeButtonProps = {
 export default function HomeButton({ theme }: HomeButtonProps) {
   return (
     <TouchableOpacity
-      onPress= {() => router.navigate('/')}
+      onPress= {() => router.navigate('/home')}
       style={{
         marginLeft: 15,
         padding: 6,
