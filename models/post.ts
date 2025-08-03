@@ -16,5 +16,6 @@ export default interface Post {
     userProfilePicture?: string;
     post_media?: PostMedia[];
     showActions?: boolean;
+    isLikedByUser?: boolean;
 }
 

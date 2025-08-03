@@ -1,7 +1,9 @@
 import PostCard from "@/components/PostCard/PostCard";
 import { darkThemeColors, lightThemeColors } from "@/constants";
+import { useAuth } from "@/hooks/AuthContext";
 import { useTheme } from "@/hooks/ThemeContext";
 import Post from "@/models/post";
+import { supabase } from "@/supabase";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -12,129 +14,112 @@ import {
   ViewToken,
 } from "react-native";
 
-// Generate more mock posts for pagination demo
-const generateMockPost = (id: number): Post => ({
-  id: `${id}`,
-  user_id: `u${((id - 1) % 5) + 1}`,
-  content: [
-    "Looking for a bassist for my indie rock project in NYC 🎸",
-    "Open to collabs for an online jazz jam. DM me! 🎷💬",
-    "Just finished recording my new album! What do you think? 🎵",
-    "Looking for a drummer to complete our band setup 🥁",
-    "Anyone interested in a acoustic guitar session? ✨",
-    "New synthesizer sounds amazing! Check this out 🎹",
-    "Live performance tonight at The Blue Note 🎤",
-  ][id % 7],
-  caption: "",
-  created_at: `2024-01-${String(id).padStart(2, "0")}`,
-  updated_at: `2024-01-${String(id).padStart(2, "0")}`,
-  visibility: "public",
-  likes_count: Math.floor(Math.random() * 50) + 1,
-  comments_count: Math.floor(Math.random() * 10) + 1,
-  userName: [
-    "Alex Rivera",
-    "JazzQueen",
-    "RockStar99",
-    "MelodyMaker",
-    "BeatDrop",
-  ][(id - 1) % 5],
-  userProfilePicture: `https://i.pravatar.cc/100?img=${((id - 1) % 10) + 1}`,
-  post_media:
-    id % 3 === 0
-      ? [
-          // Every 3rd post has audio - use pre-signed URLs for external media
-          {
-            id: `m${id}_audio`,
-            post_id: `${id}`,
-            media_path: "external", // Indicates external URL
-            signed_url:
-              "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
-            type: "audio",
-            position: 0,
-            created_at: `2024-01-${String(id).padStart(2, "0")}`,
-          },
-        ]
-      : [
-          // Other posts have mixed media - use pre-signed URLs for external media
-          {
-            id: `m${id}_1`,
-            post_id: `${id}`,
-            media_path: "external", // Indicates external URL
-            signed_url:
-              id % 2 === 0
-                ? "https://images.unsplash.com/photo-1511376777868-611b54f68947"
-                : "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-            type: id % 2 === 0 ? "image" : "video",
-            position: 0,
-            created_at: `2024-01-${String(id).padStart(2, "0")}`,
-          },
-          ...(Math.random() > 0.6
-            ? [
-                {
-                  id: `m${id}_2`,
-                  post_id: `${id}`,
-                  media_path: "external", // Indicates external URL
-                  signed_url:
-                    "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f",
-                  type: "image" as const,
-                  position: 1,
-                  created_at: `2024-01-${String(id).padStart(2, "0")}`,
-                },
-              ]
-            : []),
-        ],
-  showActions: true,
-});
-
-// Generate a large dataset for pagination
-const ALL_POSTS: Post[] = Array.from({ length: 50 }, (_, i) =>
-  generateMockPost(i + 1)
-);
-
 const POSTS_PER_PAGE = 10;
 
 
 const FeedScreen = () => {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const [visiblePostIds, setVisiblePostIds] = useState<string[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
 
-  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+  const { width: screenWidth } = Dimensions.get("window");
   const isTablet = screenWidth >= 768;
   const isLargeScreen = screenWidth >= 1024;
 
+  const fetchPosts = async (offset: number = 0) => {
+    try {
+      const { data: postsData, error } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          users!posts_user_id_fkey (
+            user_name,
+            avatar_url
+          ),
+          post_media (
+            id,
+            type,
+            position,
+            media_path,
+            created_at
+          ),
+          post_likes!left (
+            user_id
+          )
+        `)
+        .eq("visibility", "public")
+        .order("created_at", { ascending: false })
+        .range(offset, offset + POSTS_PER_PAGE - 1);
+
+      if (error) throw error;
+
+      // Transform the data to match our Post interface
+      const transformedPosts: Post[] = (postsData || []).map((post: any) => {
+        return {
+          id: post.id,
+          user_id: post.user_id,
+          content: post.content,
+          caption: post.caption || "",
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+          visibility: post.visibility,
+          likes_count: post.likes_count || 0,
+          comments_count: post.comments_count || 0,
+          userName: post.users?.user_name || "Unknown User",
+          userProfilePicture: post.users?.avatar_url,
+          post_media: (post.post_media || [])
+            .map((media: any) => ({
+              ...media,
+              post_id: post.id,
+            }))
+            .sort((a: any, b: any) => a.position - b.position),
+          showActions: true,
+          isLikedByUser: user?.id ? post.post_likes?.some((like: any) => like.user_id === user.id) : false,
+        };
+      });
+
+      return transformedPosts;
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      return [];
+    }
+  };
+
   // Load initial posts
   useEffect(() => {
-    const initialPosts = ALL_POSTS.slice(0, POSTS_PER_PAGE);
-    setPosts(initialPosts);
-    setCurrentPage(1);
-    setHasMore(ALL_POSTS.length > POSTS_PER_PAGE);
+    const loadInitialPosts = async () => {
+      setLoading(true);
+      const initialPosts = await fetchPosts(0);
+      setPosts(initialPosts);
+      setCurrentPage(1);
+      setHasMore(initialPosts.length === POSTS_PER_PAGE);
+      setLoading(false);
+    };
+
+    loadInitialPosts();
   }, []);
 
-  const loadMorePosts = useCallback(() => {
+  const loadMorePosts = useCallback(async () => {
     if (loading || !hasMore) return;
 
     setLoading(true);
 
-    // Simulate network delay
-    setTimeout(() => {
-      const startIndex = currentPage * POSTS_PER_PAGE;
-      const endIndex = startIndex + POSTS_PER_PAGE;
-      const newPosts = ALL_POSTS.slice(startIndex, endIndex);
+    const offset = currentPage * POSTS_PER_PAGE;
+    const newPosts = await fetchPosts(offset);
 
-      if (newPosts.length > 0) {
-        setPosts((prevPosts) => [...prevPosts, ...newPosts]);
-        setCurrentPage((prev) => prev + 1);
-        setHasMore(endIndex < ALL_POSTS.length);
-      } else {
-        setHasMore(false);
-      }
+    if (newPosts.length > 0) {
+      setPosts((prevPosts) => [...prevPosts, ...newPosts]);
+      setCurrentPage((prev) => prev + 1);
+      setHasMore(newPosts.length === POSTS_PER_PAGE);
+    } else {
+      setHasMore(false);
+    }
 
-      setLoading(false);
-    }, 500); // 500ms delay to simulate network
+    setLoading(false);
   }, [currentPage, loading, hasMore]);
 
   const onEndReached = () => {
@@ -170,7 +155,7 @@ const FeedScreen = () => {
   };
 
   return (
-    <View>
+    <View style={{ flex: 1 }}>
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
@@ -222,7 +207,7 @@ const getStyles = (
         theme === "dark"
           ? darkThemeColors.background
           : lightThemeColors.background,
-      minHeight: "100%",
+      flexGrow: 1,
     },
   });
 

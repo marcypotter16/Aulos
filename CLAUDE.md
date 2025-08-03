@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run on web**: `npx expo start --web` or `npm run web`
 - **Install dependencies**: `npm install`
 - **Lint code**: `npm run lint` (uses ESLint with Expo config)
+- **EAS and install android studio**: Set up Expo Application Services (EAS) and install Android Studio for development environment
 
 ## Architecture Overview
 
@@ -65,3 +66,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## TODO List
 - Implement URL Renewal System
+
+## Good Ideas for Future Implementation
+- **Preemptive Media URL Generation**: Generate signed URLs during post fetch for faster media loading. While less efficient for unseen content, this provides immediate responsiveness when users scroll through posts without waiting for URL generation. Could be implemented as an optional "fast mode" or for posts in the visible viewport.
