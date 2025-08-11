@@ -3,8 +3,12 @@ import { useAuth } from "@/hooks/AuthContext";
 import { useTheme } from "@/hooks/ThemeContext";
 import { supabase } from "@/supabase";
 import { Link, router } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
+  KeyboardAvoidingView,
+  Keyboard,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -25,6 +29,32 @@ const LoginPage = () => {
   
   // Refs for navigation
   const passwordRef = useRef<TextInput>(null);
+
+  // Keyboard animation
+  const [slideAnim] = useState(new Animated.Value(0));
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardWillShow', () => {
+      Animated.timing(slideAnim, {
+        toValue: -30,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    const hideSubscription = Keyboard.addListener('keyboardWillHide', () => {
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    });
+
+    return () => {
+      showSubscription?.remove();
+      hideSubscription?.remove();
+    };
+  }, [slideAnim]);
 
   // Authentication context
   const handleLogin = async () => {
@@ -73,8 +103,13 @@ const LoginPage = () => {
   };
 
   return (
-    <View style={getStyles(theme).container}>
-      <Text style={getStyles(theme).title}>Welcome Back</Text>
+    <KeyboardAvoidingView 
+      style={getStyles(theme).container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <Animated.View style={{ transform: [{ translateY: slideAnim }] }}>
+        <Text style={getStyles(theme).title}>Welcome Back</Text>
 
       <TextInput
         style={getStyles(theme).input}
@@ -128,7 +163,8 @@ const LoginPage = () => {
           Don't have an account? Register
         </Text>
       </Link>
-    </View>
+      </Animated.View>
+    </KeyboardAvoidingView>
   );
 };
 

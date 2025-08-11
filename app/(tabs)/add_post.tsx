@@ -9,15 +9,16 @@ import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import uuid from 'react-native-uuid';
 
 type MediaItem = {
     uri: string;
-    file: Blob;
+    file?: Blob; // Only available on web
     name: string;
     type: string; // mimetype like 'video/mp4', 'image/jpeg', etc.
+    size: number;
 };
 
 
@@ -35,29 +36,76 @@ export default function AddPostScreen() {
     const POST_ID = uuid.v4()
 
     const pickMedia = async () => {
-        const result = await DocumentPicker.getDocumentAsync({
-            type: [ 'video/*', 'audio/*', 'image/*' ],
-            multiple: true,
-        });
-
-        if (result.canceled || !result.assets?.length) {
-            Toast.show({
-                type: 'info',
-                text1: 'Selection canceled or no files selected',
+        try {
+            console.log('Starting media selection...');
+            const result = await DocumentPicker.getDocumentAsync({
+                type: [ 'video/*', 'audio/*', 'image/*' ],
+                multiple: true,
             });
-            return;
-        }
 
-        const pickedAssets = result.assets.map(asset => ({
-            uri: asset.uri,
-            file: asset.file!,
-            name: asset.name,
-            type: asset.mimeType ?? 'unknown',
-        }));
+            console.log('DocumentPicker result:', result);
+
+            if (result.canceled || !result.assets?.length) {
+                console.log('Selection canceled or no assets');
+                Toast.show({
+                    type: 'info',
+                    text1: 'Selection canceled or no files selected',
+                });
+                return;
+            }
+
+            console.log('Processing assets:', result.assets);
+
+            const pickedAssets = await Promise.all(
+                result.assets.map(async (asset, index) => {
+                    console.log(`Processing asset ${index}:`, {
+                        name: asset.name,
+                        uri: asset.uri,
+                        mimeType: asset.mimeType,
+                        hasFile: !!asset.file,
+                        size: asset.size,
+                        platform: Platform.OS
+                    });
+
+                    let processedAsset: MediaItem;
+                    
+                    if (Platform.OS === 'web' && asset.file) {
+                        // Web platform - file is directly available
+                        console.log(`Asset ${index}: Using direct file for web`);
+                        processedAsset = {
+                            uri: asset.uri,
+                            file: asset.file,
+                            name: asset.name,
+                            type: asset.mimeType ?? 'unknown',
+                            size: asset.file.size,
+                        };
+                    } else {
+                        // Mobile platform - use URI directly, no blob conversion
+                        console.log(`Asset ${index}: Using URI for mobile upload`);
+                        processedAsset = {
+                            uri: asset.uri,
+                            name: asset.name,
+                            type: asset.mimeType ?? 'unknown',
+                            size: asset.size || 0,
+                        };
+                    }
+
+                    console.log(`Asset ${index} processed:`, {
+                        name: processedAsset.name,
+                        size: processedAsset.size,
+                        type: processedAsset.type,
+                        hasFile: !!processedAsset.file
+                    });
+
+                    return processedAsset;
+                })
+            );
+
+            console.log('All assets processed:', pickedAssets.length);
 
         // Check file sizes (Supabase free tier has 50MB limit)
         const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
-        const oversizedFiles = pickedAssets.filter(asset => asset.file.size > MAX_FILE_SIZE);
+        const oversizedFiles = pickedAssets.filter(asset => asset.size > MAX_FILE_SIZE);
         
         if (oversizedFiles.length > 0) {
             Toast.show({
@@ -72,7 +120,7 @@ export default function AddPostScreen() {
         const existingFiles = medias || [];
         const newFiles = pickedAssets.filter(newAsset => 
             !existingFiles.some(existing => 
-                existing.name === newAsset.name && existing.file.size === newAsset.file.size
+                existing.name === newAsset.name && existing.size === newAsset.size
             )
         );
 
@@ -93,6 +141,15 @@ export default function AddPostScreen() {
             text1: `Added ${newFiles.length} file(s)`,
             text2: `Total: ${(existingFiles.length + newFiles.length)} files`,
         });
+        
+        } catch (error) {
+            console.error('Error in pickMedia:', error);
+            Toast.show({
+                type: 'error',
+                text1: 'Failed to select media',
+                text2: error instanceof Error ? error.message : 'Unknown error',
+            });
+        }
     };
 
     const clearAllMedia = () => {
@@ -122,6 +179,15 @@ export default function AddPostScreen() {
         setUploadProgress({});
         
         try {
+            console.log('Starting post creation...');
+            console.log('Post data:', {
+                id: POST_ID,
+                user_id: user?.id,
+                content: content,
+                visibility: visibility,
+                mediaCount: medias?.length || 0
+            });
+
             // First insert the post in posts!
             const { error: postError } = await supabase.from('posts').insert({
                 id: POST_ID,
@@ -131,7 +197,12 @@ export default function AddPostScreen() {
                 visibility: visibility,
             });
 
-            if (postError) throw postError;
+            if (postError) {
+                console.error('Post creation error:', postError);
+                throw postError;
+            }
+
+            console.log('Post created successfully, now uploading media...');
 
             // Then insert the media in the bucket
             if (medias && medias.length > 0) {
@@ -139,17 +210,59 @@ export default function AddPostScreen() {
                     const media = medias[index];
                     const uploadPath = `${POST_ID}/${media.name}`;
                     
+                    console.log(`Starting upload ${index + 1}/${medias.length}:`, {
+                        name: media.name,
+                        size: media.size,
+                        type: media.type,
+                        path: uploadPath,
+                        hasFile: !!media.file,
+                        platform: Platform.OS
+                    });
+                    
                     // Update progress for this file
                     setUploadProgress(prev => ({ ...prev, [media.name]: 0 }));
 
-                    const result = await supabase.storage
-                        .from("post-media-bucket")
-                        .upload(uploadPath, media.file, {
-                            contentType: media.type,
-                            upsert: true,
-                        });
+                    console.log(`Uploading file to Supabase storage...`);
+                    let result;
+                    
+                    if (Platform.OS === 'web' && media.file) {
+                        // Web upload using blob
+                        console.log('Using blob upload for web');
+                        result = await supabase.storage
+                            .from("post-media-bucket")
+                            .upload(uploadPath, media.file, {
+                                contentType: media.type,
+                                upsert: true,
+                            });
+                    } else {
+                        // Mobile upload - use FormData approach for better React Native compatibility
+                        console.log('Using FormData upload for mobile:', media.uri);
+                        
+                        // Create a FormData-compatible file object
+                        const fileObj = {
+                            uri: media.uri,
+                            type: media.type,
+                            name: media.name,
+                        };
+                        
+                        console.log('Created file object for mobile upload:', fileObj);
+                        
+                        result = await supabase.storage
+                            .from("post-media-bucket")
+                            .upload(uploadPath, fileObj as any, {
+                                contentType: media.type,
+                                upsert: true,
+                            });
+                    }
+
+                    console.log(`Upload result for ${media.name}:`, {
+                        success: !result.error,
+                        error: result.error?.message,
+                        data: result.data
+                    });
 
                     if (result.error) {
+                        console.error('Storage upload failed:', result.error);
                         // Clean up the post if media upload fails
                         await supabase.from('posts').delete().eq('id', POST_ID);
                         
@@ -165,6 +278,7 @@ export default function AddPostScreen() {
 
                     // Mark this file as complete
                     setUploadProgress(prev => ({ ...prev, [media.name]: 100 }));
+                    console.log(`File ${media.name} uploaded successfully`);
 
                     const baseType = media.type.startsWith("video")
                         ? "video"
@@ -314,7 +428,7 @@ export default function AddPostScreen() {
                                     {media.name}
                                 </Text>
                                 <Text style={styles(theme).mediaSize}>
-                                    {(media.file.size / 1024 / 1024).toFixed(1)}MB
+                                    {(media.size / 1024 / 1024).toFixed(1)}MB
                                 </Text>
                             </View>
                             <TouchableOpacity 

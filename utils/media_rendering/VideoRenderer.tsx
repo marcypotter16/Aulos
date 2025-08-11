@@ -32,10 +32,20 @@ const VideoRenderer = ({ media, style }: Props) => {
 
   const handleThumbnailPress = () => {
     if (videoPlayer) {
+      console.log('Thumbnail pressed, video player state:', {
+        muted: videoPlayer.muted,
+        volume: videoPlayer.volume,
+        status: videoPlayer.status
+      });
+      
       setShowThumbnail(false);
       setTimeout(() => {
         try {
           videoPlayer.play();
+          console.log('Video play called, new state:', {
+            muted: videoPlayer.muted,
+            volume: videoPlayer.volume
+          });
         } catch (error) {
           console.warn('Error starting video playback:', error);
         }
@@ -73,6 +83,7 @@ const VideoRenderer = ({ media, style }: Props) => {
             allowsFullscreen
             allowsPictureInPicture
             nativeControls={true}
+            crossOrigin='anonymous'
           />
         )
       )}

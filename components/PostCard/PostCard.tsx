@@ -35,7 +35,7 @@ const getPostCardHeight = () => {
 
 const PostCard = ({ post, isVisible }: Props) => {
   const { theme, colorScheme } = useTheme();
-  console.log(colorScheme);
+  // console.log(colorScheme);
   
   const { user } = useAuth()
   const styles = useMemo(() => getStyles(theme), [theme]);

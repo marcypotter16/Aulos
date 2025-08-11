@@ -20,7 +20,7 @@ export const useVideoPlayerForMedia = (media: PostMedia | null): VideoPlayer | n
       const timer = setTimeout(() => {
         try {
           videoPlayer.loop = true;
-          videoPlayer.muted = true;
+          videoPlayer.muted = false;
           setIsReady(true);
         } catch (error) {
           console.warn('Failed to configure video player:', error);

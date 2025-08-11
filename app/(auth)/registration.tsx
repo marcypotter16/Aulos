@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Link, router } from 'expo-router';
 import React, { useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import * as yup from 'yup';
 import { UserCreate } from '../schemas/user';
@@ -94,7 +94,11 @@ const Registration = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <Text style={styles.title}>Create an Account</Text>
 
       {fields.map((field, index) => (
@@ -134,7 +138,7 @@ const Registration = () => {
       <Link href="/(auth)/login" style={{ marginTop: 12, textAlign: 'center', color: styles.buttonText.color }}>
         Already have an account? Log in
       </Link>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
